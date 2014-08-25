@@ -229,7 +229,7 @@ if [ $ENABLED -eq 1 ]; then
 				echo $GOV_DEBUG > /sys/devices/system/cpu/cpufreq/$CPU_GOV/debug_mask
 				echo $GOV_UP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold
 				echo $GOV_UP_ANY > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_any_cpu_load
-				echo $GOV_UP_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_thrshold_multi_core
+				echo $GOV_UP_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_multi_core
 				echo $GOV_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential
 				echo $GOV_DOWN_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential_multi_core
 				echo $GOV_SAMP_RATE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_rate	
