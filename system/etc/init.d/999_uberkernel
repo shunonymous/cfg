@@ -419,7 +419,8 @@ if [ $ENABLED -eq 1 ]; then
 
 	##MPDECISION IDLE FREQUENCY
 	echo $SCREEN_OFF_FREQ > /sys/kernel/msm_mpdecision/conf/idle_freq
-
+	echo MPDECISION Max Screen-off Frequency\: $SCREEN_OFF_FREQ >> $UBER_LOGFILE;
+	
 	sleep $WAIT_TIMERS
 	sync
      
