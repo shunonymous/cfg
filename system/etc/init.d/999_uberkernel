@@ -653,6 +653,8 @@ if [ $ENABLED -eq 1 ]; then
 	
 	sleep $WAIT_TIMERS
 	sync
+	
+	echo "Finished kernel configuration" >> $UBER_LOGFILE
 
 #======================================================================================
 else
