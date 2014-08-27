@@ -407,11 +407,11 @@ if [ $ENABLED -eq 1 ]; then
 	echo $SCHED_MC_POWERSAVINGS > /sys/devices/system/cpu/sched_mc_power_savings
 
 	if [ $SCHED_MC_POWERSAVINGS -eq 0 ]; then
-	echo Multicore Power Saving\: Enabled >> $UBER_LOGFILE;
+		echo Multicore Power Saving\: Disabled >> $UBER_LOGFILE;
 	elif [ $SCHED_MC_POWERSAVINGS -eq 1 ]; then
 		echo Multicore Power Saving\: Enabled >> $UBER_LOGFILE;
 	elif [ $SCHED_MC_POWERSAVINGS -eq 2 ]; then
-		echo Multicore Power Saving\: AGGRESSIVE >> $UBER_LOGFILE;
+		echo Multicore Power Saving\: Aggressive >> $UBER_LOGFILE;
 	fi
 
 	sleep $WAIT_TIMERS
