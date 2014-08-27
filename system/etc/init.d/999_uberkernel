@@ -94,7 +94,7 @@ if [ $ENABLED -eq 1 ]; then
 	fi
 
 	##Battery Life Extender
-	echo $BLX > /sys/class//misc/batterylifeextender/charging_limit
+	echo $BLX > /sys/class/misc/batterylifeextender/charging_limit
 	echo Battery Life Extender\: $BLX >> $UBER_LOGFILE;
 
 	##FASTCHARGE
