@@ -661,4 +661,6 @@ else
 	echo UBER PRESETS\: Disabled >> $UBER_LOGFILE;
 fi
 
+chmod 644 $UBER_LOGFILE
+
 exit 0
