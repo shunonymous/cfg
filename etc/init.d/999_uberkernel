@@ -640,14 +640,19 @@ if [ $ENABLED -eq 1 ]; then
 	sleep $WAIT_TIMERS
 	sync
 	 
-	echo $POWER_SUSPEND > /sys/kernel/power_suspend/power_suspend_state
-
-	if [ $POWER_SUSPEND -eq 1 ]; then
-		echo Power Suspend\: Enabled >> $UBER_LOGFILE;
-	else
-		echo Power Suspend\: Disabled >> $UBER_LOGFILE;
+	if [ $POWER_SUSPEND -eq 0 ]; then
+		echo Power Suspend Mode\: AUTOSLEEP >> $UBER_LOGFILE;
+	elif [ $POWER_SUSPEND -eq 1 ]; then
+		echo Power Suspend Mode\: USERSPACE >> $UBER_LOGFILE;
+		echo 1 > /sys/kernel/power_suspend/power_suspend_state
+	elif [ $POWER_SUSPEND -eq 2 ]; then
+		echo Power Suspend Mode\: LCD_PANEL >> $UBER_LOGFILE;
+	else [ $POWER_SUSPEND -eq 3 ]; then
+		echo Power Suspend Mode\: HYBRID >> $UBER_LOGFILE;
 	fi
-
+	
+	sleep $WAIT_TIMERS
+	sync
 
 #======================================================================================
 else
