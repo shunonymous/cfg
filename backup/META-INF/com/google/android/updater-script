@@ -1,0 +1,68 @@
+
+# Unpack Scripts
+package_extract_dir("kernel", "/tmp");
+set_perm(0, 0, 0777, "/tmp/binprep.sh");
+set_perm(0, 0, 0777, "/tmp/edit_ramdisk.sh");
+set_perm(0, 0, 0777, "/tmp/mkbootimg.sh");
+set_perm(0, 0, 0777, "/tmp/mkbootimg");
+set_perm(0, 0, 0777, "/tmp/unpackbootimg");
+set_perm(0, 0, 0777, "/tmp/busybox");
+set_perm(0, 0, 0777, "/tmp/cfg.sh");
+set_progress(0.1);
+
+# Prep
+mount("ext4", "EMMC", "/dev/block/platform/msm_sdcc.1/by-name/system", "/system");
+set_progress(0.2);
+run_program("/sbin/busybox", "mount", "/system");
+run_program("/tmp/modclean.sh");
+run_program("/tmp/cfg.sh");
+delete_recursive("/system/lib/modules");
+package_extract_dir("modules", "/system/lib/modules");
+set_progress(0.3);
+
+# Delete some old init.ds
+ifelse(
+    file_getprop("/system/build.prop","uber.cfg") == "none",
+	(
+		ui_print("Removing CFG Files"); 
+		delete("/system/etc/init.d/999_uberkernel");
+		delete("/system/etc/uber_v1.2.cfg");
+		delete("/system/etc/advanced_v1.2.cfg");
+	)
+);
+delete("/system/etc/init.d/0000_frandom");
+delete("/system/etc/init.d/00_frandom");
+delete("/system/etc/init.d/00_uber");
+delete("/system/etc/init.d/00_uberkernel");
+delete("/system/etc/init.d/01_ftrim");
+delete("/system/etc/init.d/02_disableboost");
+delete("/system/etc/init.d/03_gpu");
+delete("/system/etc/init.d/04_sweep2sleep");
+delete("/system/etc/init.d/04_dirtyratio");
+delete("/system/etc/init.d/05_dirtyratio");
+delete("/system/etc/uber.cfg");
+delete("/system/etc/hotplug.cfg");
+delete("/system/etc/hotplug_v1.1.cfg");
+delete("/system/etc/uber_v1.1.cfg");
+delete("/system/etc/advanced_v1.1.cfg");
+
+#uber.cfg
+ifelse(
+    file_getprop("/system/build.prop","uber.cfg") == "clean",
+	(
+	ui_print("(Re)Setting CFG Values to Default"); 
+	package_extract_dir("cfg", "/system");
+	)
+);
+
+# Set Permissions
+ifelse(
+    file_getprop("/system/build.prop","uber.cfg") != "none",
+	(
+	ui_print("Installing CFG Backend"); 
+	package_extract_dir("system", "/system");
+	set_perm(0, 2000, 0755, "/system/etc/init.d/999_uberkernel");
+	set_perm(0, 2000, 0755, "/system/bin/fstrim");
+	)
+);
+set_progress(0.4);
