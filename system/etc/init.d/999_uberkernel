@@ -5,8 +5,8 @@
 
 # - Define log and config paths
 UBER_LOGFILE="/data/local/tmp/uber.log"
-UBER_CONFIGFILE="/system/etc/uber_v1.1.cfg"
-UBER_ADV_CONFIGFILE="/system/etc/advanced_v1.1.cfg"
+UBER_CONFIGFILE="/system/etc/uber_v1.2.cfg"
+UBER_ADV_CONFIGFILE="/system/etc/advanced_v1.2.cfg"
 
 # - Call
 . $UBER_CONFIGFILE
