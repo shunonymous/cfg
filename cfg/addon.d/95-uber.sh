@@ -6,8 +6,8 @@
 
 list_files() {
 cat <<EOF
-etc/uber_v1.1.cfg
-etc/advanced_v1.1.cfg
+etc/uber_v1.2.cfg
+etc/advanced_v1.2.cfg
 EOF
 }
 
