@@ -537,12 +537,12 @@ if [ $ENABLED -eq 1 ]; then
 		echo "Sound Engine: Franco Sound" | tee -a $UBER_LOGFILE
 
 	elif [ -d $FAUX_PATH ]; then
-		echo "$FAUX_CAM" > /sys/kernel/sound_control_3/gpl_cam_mic_gain
-		echo "$FAUX_HEAD $FAUX_HEAD" > /sys/kernel/sound_control_3/gpl_headphone_gain
-		echo "$FAUX_POW $FAUX_POW" > /sys/kernel/sound_control_3/gpl_headphone_pa_gain
-		echo "$FAUX_MIC" > /sys/kernel/sound_control_3/gpl_mic_gain
-		echo "$FAUX_LOCK" > /sys/kernel/sound_control_3/gpl_sound_control_locked
-		echo "$FAUX_SPEAKER $FAUX_SPEAKER" > /sys/kernel/sound_control_3/gpl_speaker_gain
+		echo $FAUX_CAM > /sys/kernel/sound_control_3/gpl_cam_mic_gain
+		echo $FAUX_HEAD $FAUX_HEAD > /sys/kernel/sound_control_3/gpl_headphone_gain
+		echo $FAUX_POW $FAUX_POW > /sys/kernel/sound_control_3/gpl_headphone_pa_gain
+		echo $FAUX_MIC > /sys/kernel/sound_control_3/gpl_mic_gain
+		echo $FAUX_LOCK > /sys/kernel/sound_control_3/gpl_sound_control_locked
+		echo $FAUX_SPEAKER $FAUX_SPEAKER > /sys/kernel/sound_control_3/gpl_speaker_gain
 		echo "Sound Engine: Faux Sound" | tee -a $UBER_LOGFILE
 
 	else
