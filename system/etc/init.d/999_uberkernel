@@ -484,18 +484,18 @@ if [ $ENABLED -eq 1 ]; then
 
 	# 7.1 GAMMA PRESET
 	if [ $GAMMA_PRESET -eq 1 ]; then
-		#  Red Positive                = /sys/module/dsi_panel/kgamma_rp
-		echo "0 12 19 30 39 48 56 72 83 105 118 126 121 114 109 102 93 73 63 54 40 33 20" > /sys/module/dsi_panel/kgamma_rp
-		#  Red Negative                = /sys/module/dsi_panel/kgamma_rn
-		echo "0 12 19 30 39 48 56 72 83 105 118 130 121 115 114 102 82 76 63 54 40 33 20" > /sys/module/dsi_panel/kgamma_rn
-		#  Green Positive              = /sys/module/dsi_panel/kgamma_gp
-		echo "0 12 19 30 39 54 61 78 84 107 123 132 117 110 108 97 90 71 61 52 45 37 21" > /sys/module/dsi_panel/kgamma_gp
-		#  Green Negative              = /sys/module/dsi_panel/kgamma_gn
-		echo "0 12 19 30 39 54 61 78 84 107 121 130 119 112 107 99 76 72 57 50 45 37 21" > /sys/module/dsi_panel/kgamma_gn
-		#  Blue Positive               = /sys/module/dsi_panel/kgamma_bp
-		echo "0 12 19 30 39 48 56 72 83 105 121 126 119 112 107 99 91 71 63 53 44 36 22" > /sys/module/dsi_panel/kgamma_bp
 		#  Blue Negative               = /sys/module/dsi_panel/kgamma_bn
-		echo "0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22" > /sys/module/dsi_panel/kgamma_bn
+		echo "0 12 19 30 39 48 56 72 83 105 118 126 121 114 109 102 93 73 63 54 40 33 20" > /sys/module/dsi_panel/kgamma_bn
+		#  Blue Positive               = /sys/module/dsi_panel/kgamma_bp
+		echo "0 12 19 30 39 48 56 72 83 105 118 130 121 115 114 102 82 76 63 54 40 33 20" > /sys/module/dsi_panel/kgamma_bp
+		#  Green Negative              = /sys/module/dsi_panel/kgamma_gn
+		echo "0 12 19 30 39 54 61 78 84 107 123 132 117 110 108 97 90 71 61 52 45 37 21" > /sys/module/dsi_panel/kgamma_gn
+		#  Green Positive              = /sys/module/dsi_panel/kgamma_gp
+		echo "0 12 19 30 39 54 61 78 84 107 121 130 119 112 107 99 76 72 57 50 45 37 21" > /sys/module/dsi_panel/kgamma_gp
+		#  Red Negative                = /sys/module/dsi_panel/kgamma_rn
+		echo "0 12 19 30 39 48 56 72 83 105 121 126 119 112 107 99 91 71 63 53 44 36 22" > /sys/module/dsi_panel/kgamma_rn
+		#  Red Positive                = /sys/module/dsi_panel/kgamma_rp
+		echo "0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22" > /sys/module/dsi_panel/kgamma_rp
 		#  White Point                 = /sys/module/dsi_panel/kgamma_w
 		echo "28" > /sys/module/dsi_panel/kgamma_w
 
