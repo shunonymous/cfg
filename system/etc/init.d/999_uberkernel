@@ -258,7 +258,7 @@ if [ $ENABLED -eq 1 ]; then
 		sleep $WAIT_TIMERS
 		sync
 		
-    	# 4.1.1 MPDECISION SCREEN-OFF MAX FREQUENCY
+    		# 4.1.1 MPDECISION SCREEN-OFF MAX FREQUENCY
 		echo $MPDEC_SCROFF_MAX_FREQ > /sys/kernel/msm_mpdecision/conf/idle_freq
 		echo "MPDECISION Max Screen-off Frequency: $MPDEC_SCROFF_MAX_FREQ" | tee -a $UBER_LOGFILE
 	
@@ -289,14 +289,21 @@ if [ $ENABLED -eq 1 ]; then
 		sleep $WAIT_TIMERS
 		sync
 
-		# 4.1.4 MPDECISION MAX CPUS
+		# 4.1.4 MPDECISION MIN CPUS
+		echo $MPDEC_MIN_CORE > /sys/kernel/msm_mpdecision/conf/min_cpus
+		echo "MPDECISION Minimum CPU Cores: $MPDEC_MIN_CORE" | tee -a $UBER_LOGFILE
+
+		sleep $WAIT_TIMERS
+		sync
+
+		# 4.1.5 MPDECISION MAX CPUS
 		echo $MPDEC_MAX_CORE > /sys/kernel/msm_mpdecision/conf/max_cpus
 		echo "MPDECISION Maximum CPU Cores: $MPDEC_MAX_CORE" | tee -a $UBER_LOGFILE
 
 		sleep $WAIT_TIMERS
 		sync
 
-		# 4.1.5 MPDECISION HOTPLUG CONTROL
+		# 4.1.6 MPDECISION HOTPLUG CONTROL
 		if [ $MPDEC_HOTPLUG -eq 0 ]; then
 			echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
 			echo 37 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
@@ -345,7 +352,7 @@ if [ $ENABLED -eq 1 ]; then
 			sync
 		fi
 
-		# 4.1.6 MPDECISION UNPLUG CONTROL
+		# 4.1.7 MPDECISION UNPLUG CONTROL
 		if [ $MPDEC_UNPLUG -eq 0 ]; then
 			echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
 			echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
