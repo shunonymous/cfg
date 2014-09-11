@@ -33,7 +33,6 @@ fi
 # - Call
 . $UBER_CONFIGFILE
 . $UBER_ADV_CONFIGFILE
-. $UBER_COLORFILE
 
 # - Sound Engine paths for validation
 FRANCO_PATH="/sys/devices/virtual/misc/soundcontrol"
@@ -53,19 +52,19 @@ echo "$(date)" | tee -a $UBER_LOGFILE
 
 # 1.1 KERNEL SWITCH
 if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
-	
+
 	# - Preparation
 	echo "Waiting for system to start" | tee -a $UBER_LOGFILE
-	 
+
 	# - Wait until we see some android processes to consider boot is more or less complete (credits to AndiP71)
 	while ! pgrep com.android ; do
 		sleep 1
 	done
-	
+
 	# 1.2 GRACE TIME
 	echo "System is starting up, let's wait another $GRACE_TIME second/s" | tee -a $UBER_LOGFILE
 	sleep $GRACE_TIME
-	 
+
 	echo "Starting kernel configuration" | tee -a $UBER_LOGFILE
 
 	# 1.4 FILE SYSTEM TRIM
@@ -95,7 +94,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 		sleep $WAIT_TIMERS
 		sync
-	else         
+	else
 		echo "Frandrom: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
@@ -103,7 +102,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	if [ $EXFAT -eq 1 ]; then
 		insmod /system/lib/modules/exfat.ko
 	  	echo "ExFAT Module: Loaded" | tee -a $UBER_LOGFILE
-		 
+
 		sleep $WAIT_TIMERS
 		sync
 	else
@@ -114,17 +113,17 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		sync
 	fi
 
-# =================================================================================== 
+# ===================================================================================
 # 2. CPU SETTINGS
 # ===================================================================================
 
 	# 2.1 CPU SETTINGS SWITCH
 	if [ $CPU_SWITCH -eq 1 ]; then
-	
+
 		# 2.2 CPU FREQUENCY SCALING
 		# 2.2.1 CPU FREQUENCY SWITCH
 		if [ $CPU_FREQ_SWITCH -eq 1 ]; then
-			
+
 			# 2.2.2 CPU MAX FREQUENCY
 			echo 1 > /sys/devices/system/cpu/cpu0/online
 			echo $CPU_MAX > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
@@ -138,10 +137,10 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 1 > /sys/devices/system/cpu/cpu3/online
 			echo $CPU_MAX > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 			echo "Max Frequency CPU3: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
-			
+
 			sleep $WAIT_TIMERS
 			sync
-			
+
 			# 2.2.3 CPU MIN FREQUENCY
 			echo 1 > /sys/devices/system/cpu/cpu0/online
 			echo $CPU_MIN > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
@@ -161,10 +160,10 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		else
 			echo "CPU Frequencies: Stock" | tee -a $UBER_LOGFILE
 		fi
-		
+
 		# 2.3.1 CPU GOVERNOR SWITCH
 		if [ $CPU_GOV_SWITCH -eq 1 ]; then
-			
+
 			# 2.3.2 CPU GOVERNORS
 			echo 1 > /sys/devices/system/cpu/cpu0/online
 			echo $CPU_GOV > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
@@ -189,8 +188,8 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 				echo $GOV_UP_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_multi_core
 				echo $GOV_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential
 				echo $GOV_DOWN_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential_multi_core
-				echo $GOV_SAMP_RATE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_rate	
-				echo $GOV_SAMP_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_down_factor	
+				echo $GOV_SAMP_RATE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_rate
+				echo $GOV_SAMP_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_down_factor
 				echo $GOV_HIGH_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_step
 				echo $GOV_HIGH_LOAD > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_load
 				echo $GOV_MID_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/middle_grid_step
@@ -206,7 +205,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		else
 			echo "CPU Governor: Stock" | tee -a $UBER_LOGFILE
 		fi
-		
+
 		# 2.4 CPU MULTICORE POWER SAVING
 		echo $CPU_MC_POWERSAVINGS > /sys/devices/system/cpu/sched_mc_power_savings
 
@@ -263,7 +262,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 		sleep $WAIT_TIMERS
 		sync
-		
+
 		echo "CPU Voltage: $CPU_VOLT" | tee -a $UBER_LOGFILE
 	else
 		echo "CPU Voltage: Stock" | tee -a $UBER_LOGFILE
@@ -280,11 +279,11 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 		sleep $WAIT_TIMERS
 		sync
-		
+
     		# 4.1.1 MPDECISION SCREEN-OFF MAX FREQUENCY
 		echo $MPDEC_SCROFF_MAX_FREQ > /sys/kernel/msm_mpdecision/conf/idle_freq
 		echo "MPDECISION Max Screen-off Frequency: $MPDEC_SCROFF_MAX_FREQ" | tee -a $UBER_LOGFILE
-	
+
 		sleep $WAIT_TIMERS
 		sync
 
@@ -346,7 +345,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
 			echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
 			echo "Hotplugging of cores: Stock" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		elif [ $MPDEC_HOTPLUG -eq 2 ]; then
@@ -357,7 +356,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
 			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
 			echo "Hotplugging of cores: Fast" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		elif [ $MPDEC_HOTPLUG -eq 3 ]; then
@@ -370,7 +369,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo $TIME4 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
 			echo $TIME6 > /sys/kernel/msm_mpdecision/conf/twts_threshold_6
 			echo "Hotplugging of cores: Custom" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		fi
@@ -384,7 +383,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
 			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
 			echo "Unplugging of cores: Slow" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		elif [ $MPDEC_UNPLUG -eq 1 ]; then
@@ -395,7 +394,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
 			echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
 			echo "Unplugging of cores: Stock" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		elif [ $MPDEC_UNPLUG -eq 2 ]; then
@@ -406,7 +405,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
 			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
 			echo "Unplugging of cores: Fast" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		elif [ $MPDEC_UNPLUG -eq 3 ]; then
@@ -419,7 +418,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			echo $TIME5 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
 			echo $TIME7 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
 			echo "Unplugging of cores: Custom" | tee -a $UBER_LOGFILE
-			 
+
 			sleep $WAIT_TIMERS
 			sync
 		fi
@@ -445,7 +444,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 	sleep $WAIT_TIMERS
 	sync
-	
+
 	# 5.3 I/O READ SPEED FOR SD CARD
 	echo $IO_SD_READAHEAD > /sys/devices/virtual/bdi/179:0/read_ahead_kb
 	echo "SDCard Read-Ahead Size: $IO_SD_READAHEAD" | tee -a $UBER_LOGFILE
@@ -466,7 +465,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			# 6.2.1 GPU MAX FREQUENCY
 			echo $GPU_MAX >  /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_gpuclk
 			echo "GPU Max Frequency: $GPU_MAX kHz" | tee -a $UBER_LOGFILE
-			
+
 			sleep $WAIT_TIMERS
 			sync
 
@@ -476,7 +475,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 			sleep $WAIT_TIMERS
 			sync
-			
+
 			# 6.3.1 GPU GOVERNORS
 			echo ondemand > /sys/class/kgsl/kgsl-3d0/pwrscale/trustzone/governor
 			echo "GPU Governor: Ondemand" | tee -a $UBER_LOGFILE
@@ -522,10 +521,11 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			RED_POSITIVE="0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22"
 			WHITE_POINT="28"
 		elif [ GAMMA_PREST -eq 2 ] && [ -f $UBER_COLORFILE ]; then
-			cat $UBER_COLORFILE | while read line; do
-				read line
-				eval x$a="$line"
-			done
+			count=0
+			while [ "$count" -lt "7" ]; do
+				let "count+=1"
+				read x$count
+			done < $UBER_COLORFILE
 			BLUE_NEGATIVE=$x1
 			BLUE_POSITIVE=$x2
 			GREEN_NEGATIVE=$x3
@@ -560,7 +560,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	# 7.2 BACKLIGHT DIMMER
 	# 7.2.1 BACKLIGHT DIMMER SWITCH
 	echo $BDM_SWITCH > /sys/module/lm3630_bl/parameters/backlight_dimmer
-	
+
 	if [ $BDM_SWITCH -eq 1 ]; then
 		echo "Backlight Dimmer: Enabled" | tee -a $UBER_LOGFILE
 
@@ -598,7 +598,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	else
 		echo "Sound Engine: Stock" | tee -a $UBER_LOGFILE
 	fi
-	
+
 	sleep $WAIT_TIMERS
 	sync
 
@@ -615,10 +615,10 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		# 9.1.2 ZRAM COMPRESSION
 		echo $ZRAM_COMPRESSION > /sys/block/zram0/comp_algorithm
 		echo "zRAM COMPRESSION: $ZRAM_COMPRESSION" | tee -a $UBER_LOGFILE
-		
+
 		sleep 0.5
 		sync
-		
+
 		# 9.1.3 ZRAM DISK SIZE (MB)
 		if [ $ZRAM_DISKSIZE -eq 256 ]; then
 			echo 268435456 > /sys/block/zram0/disksize
@@ -627,11 +627,11 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		elif [ $ZRAM_DISKSIZE -eq 1024 ]; then
 			echo 1073741824 > /sys/block/zram0/disksize
 		fi
-		
+
 		mkswap /dev/block/zram0
 		swapon /dev/block/zram0
 		echo "zRAM Support: $ZRAM_DISKSIZE MB Enabled" | tee -a $UBER_LOGFILE
-		
+
 		sleep 0.5
 		sync
 	else
@@ -642,31 +642,31 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	# 9.2.1 SWAPPINESS
 	echo $SWAPPINESS > /proc/sys/vm/swappiness
 	echo "Swappiness: $SWAPPINESS" | tee -a $UBER_LOGFILE
-		
+
 	sleep 0.5
 	sync
 
 	# 9.2.2 DIRTY RATIO
 	echo $DIRTY_RATIO > /proc/sys/vm/dirty_ratio
 	echo "Dirty Ratio: $DIRTY_RATIO" | tee -a $UBER_LOGFILE
-		
+
 	sleep 0.5
 	sync
 
 	# 9.2.3 DIRTY BACKGROUND RATIO
 	echo $DIRTY_BACKGROUND_RATIO > /proc/sys/vm/dirty_background_ratio
 	echo "Dirty Background Ratio: $DIRTY_BACKGROUND_RATIO" | tee -a $UBER_LOGFILE
-		
+
 	sleep 0.5
 	sync
 
 	# 9.2.4 DROP CACHES
 	echo $DROP_CACHES > /proc/sys/vm/drop_caches
 	echo "Drop Cache: $DROP_CACHES" | tee -a $UBER_LOGFILE
-	
+
 	sleep 0.5
 	sync
-	
+
 	# 9.2.5 FS WRITEBACK DELAY MODE
 	echo $FS_DELAY > /proc/sys/vm/laptop_mode
 
@@ -675,7 +675,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	else
 		echo "FS DELAY WRITEBACK: Disabled" | tee -a $UBER_LOGFILE
 	fi
-	
+
 	sleep 0.5
 	sync
 
@@ -687,7 +687,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	else
 		echo "KSM: Disabled" | tee -a $UBER_LOGFILE
 	fi
-	
+
 	sleep $WAIT_TIMERS
 	sync
 
@@ -697,7 +697,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 	# 10.1 WAKE CONTROL SWITCH
 	if [ $WAKE_CONTROLS -eq 1 ]; then
-		
+
 		# 10.2 DOUBLE TAP TO WAKE
 		echo $DT2W > /sys/android_touch/doubletap2wake
 
@@ -726,7 +726,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 		# 10.4 POWER KEY SUSPEND
 		echo $PWRKEY > /sys/module/qpnp_power_on/parameters/pwrkey_suspend
-		
+
 		if [ $PWRKEY -eq 1 ]; then
         	echo "Powerkey Suspend: Enabled" | tee -a $UBER_LOGFILE
         else
@@ -739,7 +739,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 		sleep $WAIT_TIMERS
 		sync
-	else 
+	else
 		echo "Wake Controls: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
@@ -768,10 +768,10 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 
 	# 11.3 POWER SUSPEND
 	echo $POWER_SUSPEND > /sys/kernel/power_suspend/power_suspend_mode
-	 
+
 	sleep $WAIT_TIMERS
 	sync
-	 
+
 	if [ $POWER_SUSPEND -eq 0 ]; then
 		echo "Power Suspend Mode: AUTOSLEEP" | tee -a $UBER_LOGFILE
 	elif [ $POWER_SUSPEND -eq 1 ]; then
@@ -782,7 +782,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 	elif [ $POWER_SUSPEND -eq 3 ]; then
 		echo "Power Suspend Mode: HYBRID" | tee -a $UBER_LOGFILE
 	fi
-	
+
 	sleep $WAIT_TIMERS
 	sync
 
