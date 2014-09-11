@@ -57,7 +57,7 @@ echo "$(date)" | tee -a $UBER_LOGFILE
 # ===================================================================================
 
 # 1.1 KERNEL SWITCH
-if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
+if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 
 	# - Preparation
 	echo "Waiting for system to start" | tee -a $UBER_LOGFILE
