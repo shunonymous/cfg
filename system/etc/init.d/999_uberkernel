@@ -512,6 +512,8 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 # ===================================================================================
 	# 7.1 GAMMA PRESET
 	if [ $GAMMA_PRESET -eq 1 ] || [ $GAMMA_PRESET -eq 2 ]; then
+
+		# 7.1.1 Chet's Preset
 		if [ $GAMMA_PRESET -eq 1 ]; then
 			BLUE_NEGATIVE="0 12 19 30 39 48 56 72 83 105 118 126 121 114 109 102 93 73 63 54 40 33 20"
 			BLUE_POSITIVE="0 12 19 30 39 48 56 72 83 105 118 130 121 115 114 102 82 76 63 54 40 33 20"
@@ -520,7 +522,11 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			RED_NEGATIVE="0 12 19 30 39 48 56 72 83 105 121 126 119 112 107 99 91 71 63 53 44 36 22"
 			RED_POSITIVE="0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22"
 			WHITE_POINT="28"
-		elif [ GAMMA_PREST -eq 2 ] && [ -f $UBER_COLORFILE ]; then
+			GAMMA_SET=1
+			echo "Gamma Preset: Cl3Keners Profile" | tee -a $UBER_LOGFILE
+
+		# 7.1.2 Custom Preset
+		elif [ $GAMMA_PRESET -eq 2 ] && [ -f $UBER_COLORFILE ]; then
 			count=0
 			while [ "$count" -lt "7" ]; do
 				let "count+=1"
@@ -533,26 +539,29 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 			RED_NEGATIVE=$x5
 			RED_POSITIVE=$x6
 			WHITE_POINT=$x7
+			GAMMA_SET=1
+			echo "Gamma Preset: Custom Profile" | tee -a $UBER_LOGFILE
+
+		# 7.1.3 Fall back if Gamma Profile is missing
+		else
+			echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
 		fi
-		#  Blue Negative               = /sys/module/dsi_panel/kgamma_bn
-		echo $BLUE_NEGATIVE > /sys/module/dsi_panel/kgamma_bn
-		#  Blue Positive               = /sys/module/dsi_panel/kgamma_bp
-		echo $BLUE_POSITIVE > /sys/module/dsi_panel/kgamma_bp
-		#  Green Negative              = /sys/module/dsi_panel/kgamma_gn
-		echo $GREEN_NEGATIVE > /sys/module/dsi_panel/kgamma_gn
-		#  Green Positive              = /sys/module/dsi_panel/kgamma_gp
-		echo $GREEN_POSITIVE > /sys/module/dsi_panel/kgamma_gp
-		#  Red Negative                = /sys/module/dsi_panel/kgamma_rn
-		echo $RED_NEGATIVE > /sys/module/dsi_panel/kgamma_rn
-		#  Red Positive                = /sys/module/dsi_panel/kgamma_rp
-		echo $RED_POSITIVE > /sys/module/dsi_panel/kgamma_rp
-		#  White Point                 = /sys/module/dsi_panel/kgamma_w
-		echo $WHITE_POINT > /sys/module/dsi_panel/kgamma_w
 
-		sleep $WAIT_TIMERS
-		sync
+		# 7.1 Apply
+		if [ $GAMMA_SET -eq 1 ]; then
+			echo "$RED_POSITIVE" > /sys/module/dsi_panel/kgamma_rp
+			echo "$RED_NEGATIVE" > /sys/module/dsi_panel/kgamma_rn
+			echo "$GREEN_POSITIVE" > /sys/module/dsi_panel/kgamma_gp
+			echo "$GREEN_NEGATIVE" > /sys/module/dsi_panel/kgamma_gn
+			echo "$BLUE_POSITIVE" > /sys/module/dsi_panel/kgamma_bp
+			echo "$BLUE_NEGATIVE" > /sys/module/dsi_panel/kgamma_bn
+			echo "$WHITE_POINT" > /sys/module/dsi_panel/kgamma_w
 
-		echo "Gamma Preset: Cl3Keners Profile" | tee -a $UBER_LOGFILE
+			sleep $WAIT_TIMERS
+			sync
+		fi
+
+	# 7.1.0 Stock
 	else
 		echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
 	fi
@@ -591,7 +600,7 @@ if [ $ENABLED -eq 1 ] && [ -f $UBER_CONFIGFILE ] ; then
 		echo $FAUX_HEAD $FAUX_HEAD > /sys/kernel/sound_control_3/gpl_headphone_gain
 		echo $FAUX_POW $FAUX_POW > /sys/kernel/sound_control_3/gpl_headphone_pa_gain
 		echo $FAUX_MIC > /sys/kernel/sound_control_3/gpl_mic_gain
-        echo $FAUX_SPEAKER $FAUX_SPEAKER > /sys/kernel/sound_control_3/gpl_speaker_gain
+		echo $FAUX_SPEAKER $FAUX_SPEAKER > /sys/kernel/sound_control_3/gpl_speaker_gain
 		echo $FAUX_LOCK > /sys/kernel/sound_control_3/gpl_sound_control_locked
 		echo "Sound Engine: Faux Sound" | tee -a $UBER_LOGFILE
 
