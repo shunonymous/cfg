@@ -1,13 +1,34 @@
 #!/system/bin/sh
 
-##UBER.CFG v1.1.1
+VERSION=v1.2
+##UBER.CFG v1.2.3
 ##MERGED WITH @janres155 SCRIPTS
 
 # - Define log and config paths
+
+#LOG
 UBER_LOGFILE="/data/local/tmp/uber.log"
-UBER_CONFIGFILE="/system/etc/uber_v1.2.cfg"
-UBER_ADV_CONFIGFILE="/system/etc/advanced_v1.2.cfg"
-UBER_COLORFILE="/system/etc/uber_color_v1.2.cfg"
+
+#MASTER CFG
+if [ -f /sdcard/uber_$VERSION.cfg ]; then
+	UBER_CONFIGFILE="/sdcard/uber_$VERSION.cfg"
+else
+	UBER_CONFIGFILE="/system/etc/uber_$VERSION.cfg"
+fi
+
+#ADVANCED CONTROLS CFG
+if [ -f /sdcard/advanced_$VERSION.cfg ]; then
+	UBER_ADV_CONFIGFILE="/sdcard/advanced_$VERSION.cfg"
+else
+	UBER_ADV_CONFIGFILE="/system/etc/advanced_$VERSION.cfg"
+fi
+
+#COLOR PROFILE CFG
+if [ -f /sdcard/uber_color_$VERSION.cfg ]; then
+	UBER_COLORFILE="/sdcard/uber_color_$VERSION.cfg"
+else
+	UBER_COLORFILE="/system/etc/uber_color_$VERSION.cfg"
+fi
 
 # - Call
 . $UBER_CONFIGFILE
