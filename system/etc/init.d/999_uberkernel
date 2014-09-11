@@ -33,6 +33,7 @@ fi
 # - Call
 . $UBER_CONFIGFILE
 . $UBER_ADV_CONFIGFILE
+. $UBER_COLORFILE
 
 # - Sound Engine paths for validation
 FRANCO_PATH="/sys/devices/virtual/misc/soundcontrol"
