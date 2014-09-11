@@ -11,16 +11,26 @@ UBER_LOGFILE="/data/local/tmp/uber.log"
 
 #MASTER CFG
 if [ -f /sdcard/uber_$VERSION.cfg ]; then
-	UBER_CONFIGFILE="/sdcard/uber_$VERSION.cfg"
+	UBER_CONFIGFILE="/tmp/uber_$VERSION.cfg"
+	cp "/sdcard/uber_$VERSION.cfg" $UBER_CONFIGFILE
+	chmod 644 $UBER_CONFIGFILE
+	. $UBER_CONFIGFILE
+	rm $UBER_CONFIGFILE
 else
 	UBER_CONFIGFILE="/system/etc/uber_$VERSION.cfg"
+	. $UBER_CONFIGFILE
 fi
 
 #ADVANCED CONTROLS CFG
 if [ -f /sdcard/advanced_$VERSION.cfg ]; then
-	UBER_ADV_CONFIGFILE="/sdcard/advanced_$VERSION.cfg"
+	UBER_ADV_CONFIGFILE="/tmp/advanced_$VERSION.cfg"
+	cp "/sdcard/advanced_$VERSION.cfg" $UBER_ADV_CONFIGFILE
+	chmod 644 $UBER_ADV_CONFIGFILE
+	. $UBER_ADV_CONFIGFILE
+	rm $UBER_ADV_CONFIGFILE
 else
 	UBER_ADV_CONFIGFILE="/system/etc/advanced_$VERSION.cfg"
+	. $UBER_ADV_CONFIGFILE
 fi
 
 #COLOR PROFILE CFG
@@ -29,10 +39,6 @@ if [ -f /sdcard/uber_color_$VERSION.cfg ]; then
 else
 	UBER_COLORFILE="/system/etc/uber_color_$VERSION.cfg"
 fi
-
-# - Call
-. $UBER_CONFIGFILE
-. $UBER_ADV_CONFIGFILE
 
 # - Sound Engine paths for validation
 FRANCO_PATH="/sys/devices/virtual/misc/soundcontrol"
