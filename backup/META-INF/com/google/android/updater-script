@@ -26,8 +26,8 @@ ifelse(
 	(
 		ui_print("Removing CFG Files"); 
 		delete("/system/etc/init.d/999_uberkernel");
-		delete("/system/etc/uber_v1.2.cfg");
-		delete("/system/etc/advanced_v1.2.cfg");
+		delete("/system/etc/uber_v1.3.cfg");
+		delete("/system/etc/advanced_v1.3.cfg");
 	)
 );
 delete("/system/etc/init.d/0000_frandom");
@@ -45,6 +45,9 @@ delete("/system/etc/hotplug.cfg");
 delete("/system/etc/hotplug_v1.1.cfg");
 delete("/system/etc/uber_v1.1.cfg");
 delete("/system/etc/advanced_v1.1.cfg");
+delete("/system/etc/uber_v1.2.cfg");
+delete("/system/etc/advanced_v1.2.cfg");
+
 
 #uber.cfg
 ifelse(

@@ -1,6 +1,6 @@
 #!/sbin/sh
-version=1.2
-if [ ! -e /system/etc/uber_v$version.cfg ] || [ -e /sdcard/.reset_cfg ]; then
+VERSION=v1.3
+if [ ! -e /system/etc/uber_$VERSION.cfg ] || [ -e /sdcard/.reset_cfg ]; then
 	if grep -q uber.cfg /system/build.prop; then
 		sed -i 's/uber.cfg=dirty/uber.cfg=clean/g' /system/build.prop
 		sed -i 's/uber.cfg=none/uber.cfg=clean/g' /system/build.prop

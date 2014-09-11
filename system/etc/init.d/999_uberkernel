@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
-VERSION=v1.2
-##UBER.CFG v1.2.3
+VERSION=v1.3
+##UBER.CFG v1.3.0
 ##MERGED WITH @janres155 SCRIPTS
 
 # - Define log and config paths

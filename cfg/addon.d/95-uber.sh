@@ -1,13 +1,15 @@
 #!/sbin/sh
 #
-# /system/addon.d/79-chromebeta.sh
+# /system/addon.d/95-uber.sh
 #
+VERSION=v1.3
 . /tmp/backuptool.functions
 
 list_files() {
 cat <<EOF
-etc/uber_v1.2.cfg
-etc/advanced_v1.2.cfg
+etc/uber_$VERSION.cfg
+etc/advanced_$VERSION.cfg
+etc/uber_color_$VERSION.cfg
 EOF
 }
 
