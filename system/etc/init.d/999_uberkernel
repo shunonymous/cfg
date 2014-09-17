@@ -6,10 +6,10 @@ VERSION=v1.3
 
 # - Define log and config paths
 
-#LOG
+# - LOG
 UBER_LOGFILE="/data/local/tmp/uber.log"
 
-#MASTER CFG
+# - MASTER CFG
 if [ -f /sdcard/uber_$VERSION.cfg ]; then
 	UBER_CONFIGFILE="/tmp/uber_$VERSION.cfg"
 	cp "/sdcard/uber_$VERSION.cfg" $UBER_CONFIGFILE
@@ -21,7 +21,7 @@ else
 	. $UBER_CONFIGFILE
 fi
 
-#ADVANCED CONTROLS CFG
+# - ADVANCED CONTROLS CFG
 if [ -f /sdcard/advanced_$VERSION.cfg ]; then
 	UBER_ADV_CONFIGFILE="/tmp/advanced_$VERSION.cfg"
 	cp "/sdcard/advanced_$VERSION.cfg" $UBER_ADV_CONFIGFILE
@@ -33,7 +33,7 @@ else
 	. $UBER_ADV_CONFIGFILE
 fi
 
-#COLOR PROFILE CFG
+# - COLOR PROFILE CFG
 if [ -f /sdcard/uber_color_$VERSION.cfg ]; then
 	UBER_COLORFILE="/sdcard/uber_color_$VERSION.cfg"
 else
@@ -717,36 +717,36 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 		echo $DT2W > /sys/android_touch/doubletap2wake
 
 		if [ $DT2W -eq 1 ]; then
-        	echo "DT2W: Bottom screen enabled" | tee -a $UBER_LOGFILE
-        elif [ $DT2W -eq 2 ]; then
-        	echo "DT2W: Full enabled" | tee -a $UBER_LOGFILE
-        else
-        	echo "DT2W: Disabled" | tee -a $UBER_LOGFILE
-        fi
+        		echo "DT2W: Bottom screen enabled" | tee -a $UBER_LOGFILE
+	        elif [ $DT2W -eq 2 ]; then
+	        	echo "DT2W: Full enabled" | tee -a $UBER_LOGFILE
+	        else
+	        	echo "DT2W: Disabled" | tee -a $UBER_LOGFILE
+	        fi
 
 		# 10.3 SWEEP TO WAKE/SLEEP
-        if [ $S2WS -eq 1 ]; then
-        	echo 1 > /sys/android_touch/sweep2wake
-			echo 0 > /sys/android_touch/s2w_s2sonly
-        	echo "S2W/S: Enabled" | tee -a $UBER_LOGFILE
-        elif [ $S2WS -eq 2 ]; then
-        	echo 1 > /sys/android_touch/sweep2wake
-			echo 1 > /sys/android_touch/s2w_s2sonly
-        	echo "S2S only: Enabled" | tee -a $UBER_LOGFILE
-        else
-        	echo 0 > /sys/android_touch/sweep2wake
-			echo 0 > /sys/android_touch/s2w_s2sonly
-        	echo "S2W/S: Disabled" | tee -a $UBER_LOGFILE
-        fi
+	        if [ $S2WS -eq 1 ]; then
+	        	echo 1 > /sys/android_touch/sweep2wake
+				echo 0 > /sys/android_touch/s2w_s2sonly
+	        	echo "S2W/S: Enabled" | tee -a $UBER_LOGFILE
+	        elif [ $S2WS -eq 2 ]; then
+	        	echo 1 > /sys/android_touch/sweep2wake
+				echo 1 > /sys/android_touch/s2w_s2sonly
+	        	echo "S2S only: Enabled" | tee -a $UBER_LOGFILE
+	        else
+	        	echo 0 > /sys/android_touch/sweep2wake
+				echo 0 > /sys/android_touch/s2w_s2sonly
+	        	echo "S2W/S: Disabled" | tee -a $UBER_LOGFILE
+	        fi
 
 		# 10.4 POWER KEY SUSPEND
 		echo $PWRKEY > /sys/module/qpnp_power_on/parameters/pwrkey_suspend
 
 		if [ $PWRKEY -eq 1 ]; then
-        	echo "Powerkey Suspend: Enabled" | tee -a $UBER_LOGFILE
-        else
-        	echo "Powerkey Suspend: Disabled" | tee -a $UBER_LOGFILE
-        fi
+        		echo "Powerkey Suspend: Enabled" | tee -a $UBER_LOGFILE
+	        else
+	        	echo "Powerkey Suspend: Disabled" | tee -a $UBER_LOGFILE
+	        fi
 
 		# 10.5 WAKE TIMEOUT
 		echo $TIMEOUT > /sys/android_touch/wake_timeout
