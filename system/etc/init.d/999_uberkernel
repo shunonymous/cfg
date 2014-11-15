@@ -86,34 +86,7 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 # 12. MODULES
 # ===================================================================================
 
-	# 12.1 FRANDOM
-	if [ $FRANDOM -eq 1 ]; then
-		chmod 644 /dev/frandom
-		chmod 644 /dev/erandom
-
-		FRANDOM="/dev/frandom"
-		ERANDOM="/dev/erandom"
-
-		if [ -c "$FRANDOM" ]; then
-		  mv /dev/random /dev/random.ori
-		  ln -s /dev/frandom /dev/random
-		  chmod 644 /dev/random
-		  echo "Frandrom: Enabled" | tee -a $UBER_LOGFILE
-		fi
-
-		if [ -c "$ERANDOM" ]; then
-		  mv /dev/urandom /dev/urandom.ori
-		  ln -s /dev/erandom /dev/urandom
-		  chmod 644 /dev/urandom
-		  echo "Erandrom: Enabled" | tee -a $UBER_LOGFILE
-		fi
-		sleep $WAIT_TIMERS
-		sync
-	else
-		echo "Frandrom/Erandom: Disabled" | tee -a $UBER_LOGFILE
-	fi
-
-	# 12.2 EXFAT
+	# 12.1 EXFAT
 	if [ $EXFAT -eq 1 ]; then
 		insmod /system/lib/modules/exfat.ko
 	  	echo "ExFAT Module: Loaded" | tee -a $UBER_LOGFILE
@@ -580,23 +553,6 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	else
 		echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
 	fi
-
-	# 7.2 BACKLIGHT DIMMER
-	# 7.2.1 BACKLIGHT DIMMER SWITCH
-	echo $BDM_SWITCH > /sys/module/lm3630_bl/parameters/backlight_dimmer
-
-	if [ $BDM_SWITCH -eq 1 ]; then
-		echo "Backlight Dimmer: Enabled" | tee -a $UBER_LOGFILE
-
-		# 7.2.2 MINIMUM BRIGHTNESS
-		echo $BDM_MIN > /sys/module/lm3630_bl/parameters/min_brightness
-		echo "Minimum Brightness: $BDM_MIN" | tee -a $UBER_LOGFILE
-	else
-		echo "Backlight Dimmer: Disabled" | tee -a $UBER_LOGFILE
-	fi
-
-	sleep $WAIT_TIMERS
-	sync
 
 # ===================================================================================
 # 8. SOUND SETTINGS
