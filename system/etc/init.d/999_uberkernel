@@ -810,6 +810,30 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	sleep $WAIT_TIMERS
 	sync
 
+	# 11.8 GENTLE FAIR SLEEPERS
+	echo $GFS > /sys/kernel/sched/gentle_fair_sleepers
+
+	if [ $GFS -eq 1 ]; then
+		echo "GENTLE FAIR SLEEPERS: Enabled" | tee -a $UBER_LOGFILE
+	else
+		echo "GENTLE FAIR SLEEPERS: Disabled" | tee -a $UBER_LOGFILE
+	fi
+
+	sleep $WAIT_TIMERS
+	sync
+
+	# 11.9 ARCH POWER
+	echo $ARCH > /sys/kernel/sched/arch_power
+
+	if [ $ARCH -eq 1 ]; then
+		echo "ARCH POWER: Enabled" | tee -a $UBER_LOGFILE
+	else
+		echo "ARCH POWER: Disabled" | tee -a $UBER_LOGFILE
+	fi
+
+	sleep $WAIT_TIMERS
+	sync
+
 # ===================================================================================
 # FOOTER
 # ===================================================================================
