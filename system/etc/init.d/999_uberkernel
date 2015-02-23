@@ -11,33 +11,40 @@ UBER_LOGFILE="/data/local/tmp/uber.log"
 
 # - MASTER CFG
 if [ -f /sdcard/uber_$VERSION.cfg ]; then
-	UBER_CONFIGFILE="/tmp/uber_$VERSION.cfg"
-	cp "/sdcard/uber_$VERSION.cfg" $UBER_CONFIGFILE
-	chmod 644 $UBER_CONFIGFILE
-	. $UBER_CONFIGFILE
-	rm $UBER_CONFIGFILE
+    UBER_CONFIGFILE="/tmp/uber_$VERSION.cfg"
+    cp "/sdcard/uber_$VERSION.cfg" $UBER_CONFIGFILE
+    chmod 644 $UBER_CONFIGFILE
+    . $UBER_CONFIGFILE
+    rm $UBER_CONFIGFILE
 else
-	UBER_CONFIGFILE="/system/etc/uber_$VERSION.cfg"
-	. $UBER_CONFIGFILE
+    UBER_CONFIGFILE="/system/etc/uber_$VERSION.cfg"
+    . $UBER_CONFIGFILE
 fi
 
 # - ADVANCED CONTROLS CFG
 if [ -f /sdcard/advanced_$VERSION.cfg ]; then
-	UBER_ADV_CONFIGFILE="/tmp/advanced_$VERSION.cfg"
-	cp "/sdcard/advanced_$VERSION.cfg" $UBER_ADV_CONFIGFILE
-	chmod 644 $UBER_ADV_CONFIGFILE
-	. $UBER_ADV_CONFIGFILE
-	rm $UBER_ADV_CONFIGFILE
+    UBER_ADV_CONFIGFILE="/tmp/advanced_$VERSION.cfg"
+    cp "/sdcard/advanced_$VERSION.cfg" $UBER_ADV_CONFIGFILE
+    chmod 644 $UBER_ADV_CONFIGFILE
+    . $UBER_ADV_CONFIGFILE
+    rm $UBER_ADV_CONFIGFILE
 else
-	UBER_ADV_CONFIGFILE="/system/etc/advanced_$VERSION.cfg"
-	. $UBER_ADV_CONFIGFILE
+    UBER_ADV_CONFIGFILE="/system/etc/advanced_$VERSION.cfg"
+    . $UBER_ADV_CONFIGFILE
+fi
+
+# - VOLTAGE TABLE CFG
+if [ -f /sdcard/volt_table_$VERSION.cfg ]; then
+    UBER_VOLT_TABLE_FILE="/sdcard/volt_table_$VERSION.cfg"
+else
+    UBER_VOLT_TABLE_FILE="/system/etc/volt_table_$VERSION.cfg"
 fi
 
 # - COLOR PROFILE CFG
 if [ -f /sdcard/uber_color_$VERSION.cfg ]; then
-	UBER_COLORFILE="/sdcard/uber_color_$VERSION.cfg"
+    UBER_COLORFILE="/sdcard/uber_color_$VERSION.cfg"
 else
-	UBER_COLORFILE="/system/etc/uber_color_$VERSION.cfg"
+    UBER_COLORFILE="/system/etc/uber_color_$VERSION.cfg"
 fi
 
 # - Sound Engine paths for validation
@@ -46,7 +53,7 @@ FAUX_PATH="/sys/kernel/sound_control_3"
 
 # - Logfile maintenance
 if [ -f $UBER_LOGFILE ]; then
-  mv $UBER_LOGFILE $UBER_LOGFILE.2
+    mv $UBER_LOGFILE $UBER_LOGFILE.2
 fi
 
 # - Begin timestamp
@@ -59,365 +66,372 @@ echo "$(date)" | tee -a $UBER_LOGFILE
 # 1.1 KERNEL SWITCH
 if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 
-	# - Preparation
-	echo "Waiting for system to start" | tee -a $UBER_LOGFILE
+    # - Preparation
+    echo "Waiting for system to start" | tee -a $UBER_LOGFILE
 
-	# - Wait until we see some android processes to consider boot is more or less complete (credits to AndiP71)
-	while ! pgrep com.android ; do
-		sleep 1
-	done
+    # - Wait until we see some android processes to consider boot is more or less complete (credits to AndiP71)
+    while ! pgrep com.android ; do
+	sleep 1
+    done
 
-	# 1.2 GRACE TIME
-	echo "System is starting up, let's wait another $GRACE_TIME second/s" | tee -a $UBER_LOGFILE
-	sleep $GRACE_TIME
+    # 1.2 GRACE TIME
+    echo "System is starting up, let's wait another $GRACE_TIME second/s" | tee -a $UBER_LOGFILE
+    sleep $GRACE_TIME
 
-	echo "Starting kernel configuration" | tee -a $UBER_LOGFILE
+    echo "Starting kernel configuration" | tee -a $UBER_LOGFILE
 
-	# 1.4 FILE SYSTEM TRIM
-	if [ $FSTRIM -eq 1 ]; then
-		fstrim -v /cache| tee -a $UBER_LOGFILE
-		fstrim -v /data| tee -a $UBER_LOGFILE
-		echo "FSTRIM: Enabled" | tee -a $UBER_LOGFILE
+    # 1.4 FILE SYSTEM TRIM
+    if [ $FSTRIM -eq 1 ]; then
+	fstrim -v /cache| tee -a $UBER_LOGFILE
+	fstrim -v /data| tee -a $UBER_LOGFILE
+	echo "FSTRIM: Enabled" | tee -a $UBER_LOGFILE
+    else
+	echo "FSTRIM: Disabled" | tee -a $UBER_LOGFILE
+    fi
+
+    # ===================================================================================
+    # 12. MODULES
+    # ===================================================================================
+
+    # 12.1 EXFAT
+    if [ $EXFAT -eq 1 ]; then
+	insmod /system/lib/modules/exfat.ko
+	echo "ExFAT Module: Loaded" | tee -a $UBER_LOGFILE
+
+	sleep $WAIT_TIMERS
+	sync
+    else
+	rmmod /system/lib/modules/exfat.ko
+	echo "ExFAT Module: Unloaded" | tee -a $UBER_LOGFILE
+
+	sleep $WAIT_TIMERS
+	sync
+    fi
+
+    # ===================================================================================
+    # 2. CPU SETTINGS
+    # ===================================================================================
+
+    # 2.1 CPU SETTINGS SWITCH
+    if [ $CPU_SWITCH -eq 1 ]; then
+
+	# 2.2 CPU FREQUENCY SCALING
+	# 2.2.1 CPU FREQUENCY SWITCH
+	if [ $CPU_FREQ_SWITCH -eq 1 ]; then
+
+	    # 2.2.2 CPU MAX FREQUENCY
+	    echo 1 > /sys/devices/system/cpu/cpu0/online
+	    echo $CPU_MAX > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+	    echo "Max Frequency CPU0: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu1/online
+	    echo $CPU_MAX > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+	    echo "Max Frequency CPU1 $CPU_MAX kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu2/online
+	    echo $CPU_MAX > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
+	    echo "Max Frequency CPU2: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu3/online
+	    echo $CPU_MAX > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
+	    echo "Max Frequency CPU3: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 2.2.3 CPU MIN FREQUENCY
+	    echo 1 > /sys/devices/system/cpu/cpu0/online
+	    echo $CPU_MIN > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+	    echo "Min Frequency CPU0: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu1/online
+	    echo $CPU_MIN > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
+	    echo "Min Frequency CPU1: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu2/online
+	    echo $CPU_MIN > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
+	    echo "Min Frequency CPU2: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu3/online
+	    echo $CPU_MIN > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+	    echo "Min Frequency CPU3: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
 	else
-		echo "FSTRIM: Disabled" | tee -a $UBER_LOGFILE
+	    echo "CPU Frequencies: Stock" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 12. MODULES
-# ===================================================================================
+	# 2.3.1 CPU GOVERNOR SWITCH
+	if [ $CPU_GOV_SWITCH -eq 1 ]; then
 
-	# 12.1 EXFAT
-	if [ $EXFAT -eq 1 ]; then
-		insmod /system/lib/modules/exfat.ko
-	  	echo "ExFAT Module: Loaded" | tee -a $UBER_LOGFILE
+	    # 2.3.2 CPU GOVERNORS
+	    echo 1 > /sys/devices/system/cpu/cpu0/online
+	    echo $CPU_GOV > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+	    echo "CPU0 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu1/online
+	    echo $CPU_GOV > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+	    echo "CPU1 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu2/online
+	    echo $CPU_GOV > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
+	    echo "CPU2 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/devices/system/cpu/cpu3/online
+	    echo $CPU_GOV > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
+	    echo "CPU3 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    if [ $GOV_CONT -eq 1 ]; then
+		echo $GOV_DEBUG > /sys/devices/system/cpu/cpufreq/$CPU_GOV/debug_mask
+		echo $GOV_UP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold
+		echo $GOV_UP_ANY > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_any_cpu_load
+		echo $GOV_UP_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_multi_core
+		echo $GOV_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential
+		echo $GOV_DOWN_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential_multi_core
+		echo $GOV_SAMP_RATE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_rate
+		echo $GOV_SAMP_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_down_factor
+		echo $GOV_HIGH_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_step
+		echo $GOV_HIGH_LOAD > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_load
+		echo $GOV_MID_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/middle_grid_step
+		echo $GOV_MID_LOAD > /sys/devices/system/cpu/cpufreq/$CPU_GOV/middle_grid_load
+		echo $GOV_POWER_SAVE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/powersave_bias
+		echo $GOV_IGNORE_NICE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/ignore_nice_load
+		echo $GOV_INPUT_BOOST > /sys/devices/system/cpu/cpufreq/$CPU_GOV/input_boost
+		echo $GOV_BUSY_IO > /sys/devices/system/cpu/cpufreq/$CPU_GOV/io_is_busy
 
 		sleep $WAIT_TIMERS
 		sync
+	    fi
 	else
-		rmmod /system/lib/modules/exfat.ko
-	  	echo "ExFAT Module: Unloaded" | tee -a $UBER_LOGFILE
-
-		sleep $WAIT_TIMERS
-		sync
+	    echo "CPU Governor: Stock" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 2. CPU SETTINGS
-# ===================================================================================
+	# 2.4 CPU MULTICORE POWER SAVING
+	echo $CPU_MC_POWERSAVINGS > /sys/devices/system/cpu/sched_mc_power_savings
 
-	# 2.1 CPU SETTINGS SWITCH
-	if [ $CPU_SWITCH -eq 1 ]; then
-
-		# 2.2 CPU FREQUENCY SCALING
-		# 2.2.1 CPU FREQUENCY SWITCH
-		if [ $CPU_FREQ_SWITCH -eq 1 ]; then
-
-			# 2.2.2 CPU MAX FREQUENCY
-			echo 1 > /sys/devices/system/cpu/cpu0/online
-			echo $CPU_MAX > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-			echo "Max Frequency CPU0: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu1/online
-			echo $CPU_MAX > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
-			echo "Max Frequency CPU1 $CPU_MAX kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu2/online
-			echo $CPU_MAX > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
-			echo "Max Frequency CPU2: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu3/online
-			echo $CPU_MAX > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
-			echo "Max Frequency CPU3: $CPU_MAX kHz" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-
-			# 2.2.3 CPU MIN FREQUENCY
-			echo 1 > /sys/devices/system/cpu/cpu0/online
-			echo $CPU_MIN > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-			echo "Min Frequency CPU0: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu1/online
-			echo $CPU_MIN > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
-			echo "Min Frequency CPU1: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu2/online
-			echo $CPU_MIN > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
-			echo "Min Frequency CPU2: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu3/online
-			echo $CPU_MIN > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
-			echo "Min Frequency CPU3: $CPU_MIN kHz" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-		else
-			echo "CPU Frequencies: Stock" | tee -a $UBER_LOGFILE
-		fi
-
-		# 2.3.1 CPU GOVERNOR SWITCH
-		if [ $CPU_GOV_SWITCH -eq 1 ]; then
-
-			# 2.3.2 CPU GOVERNORS
-			echo 1 > /sys/devices/system/cpu/cpu0/online
-			echo $CPU_GOV > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
-			echo "CPU0 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu1/online
-			echo $CPU_GOV > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
-			echo "CPU1 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu2/online
-			echo $CPU_GOV > /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor
-			echo "CPU2 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
-			echo 1 > /sys/devices/system/cpu/cpu3/online
-			echo $CPU_GOV > /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor
-			echo "CPU3 Governor: $CPU_GOV" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-
-			if [ $GOV_CONT -eq 1 ]; then
-				echo $GOV_DEBUG > /sys/devices/system/cpu/cpufreq/$CPU_GOV/debug_mask
-				echo $GOV_UP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold
-				echo $GOV_UP_ANY > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_any_cpu_load
-				echo $GOV_UP_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/up_threshold_multi_core
-				echo $GOV_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential
-				echo $GOV_DOWN_CORE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/down_differential_multi_core
-				echo $GOV_SAMP_RATE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_rate
-				echo $GOV_SAMP_DOWN > /sys/devices/system/cpu/cpufreq/$CPU_GOV/sampling_down_factor
-				echo $GOV_HIGH_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_step
-				echo $GOV_HIGH_LOAD > /sys/devices/system/cpu/cpufreq/$CPU_GOV/high_grid_load
-				echo $GOV_MID_STEP > /sys/devices/system/cpu/cpufreq/$CPU_GOV/middle_grid_step
-				echo $GOV_MID_LOAD > /sys/devices/system/cpu/cpufreq/$CPU_GOV/middle_grid_load
-				echo $GOV_POWER_SAVE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/powersave_bias
-				echo $GOV_IGNORE_NICE > /sys/devices/system/cpu/cpufreq/$CPU_GOV/ignore_nice_load
-				echo $GOV_INPUT_BOOST > /sys/devices/system/cpu/cpufreq/$CPU_GOV/input_boost
-				echo $GOV_BUSY_IO > /sys/devices/system/cpu/cpufreq/$CPU_GOV/io_is_busy
-
-				sleep $WAIT_TIMERS
-				sync
-			fi
-		else
-			echo "CPU Governor: Stock" | tee -a $UBER_LOGFILE
-		fi
-
-		# 2.4 CPU MULTICORE POWER SAVING
-		echo $CPU_MC_POWERSAVINGS > /sys/devices/system/cpu/sched_mc_power_savings
-
-		if [ $CPU_MC_POWERSAVINGS -eq 0 ]; then
-			echo Multicore Power Saving: Disabled | tee -a $UBER_LOGFILE
-		elif [ $CPU_MC_POWERSAVINGS -eq 1 ]; then
-			echo Multicore Power Saving: Enabled | tee -a $UBER_LOGFILE
-		elif [ $CPU_MC_POWERSAVINGS -eq 2 ]; then
-			echo Multicore Power Saving: Aggressive | tee -a $UBER_LOGFILE
-		fi
-
-		sleep $WAIT_TIMERS
-		sync
-	else
-		echo "CPU Settings: Stock" | tee -a $UBER_LOGFILE
+	if [ $CPU_MC_POWERSAVINGS -eq 0 ]; then
+	    echo Multicore Power Saving: Disabled | tee -a $UBER_LOGFILE
+	elif [ $CPU_MC_POWERSAVINGS -eq 1 ]; then
+	    echo Multicore Power Saving: Enabled | tee -a $UBER_LOGFILE
+	elif [ $CPU_MC_POWERSAVINGS -eq 2 ]; then
+	    echo Multicore Power Saving: Aggressive | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 3. CPU VOLTAGE SETTINGS
-# ===================================================================================
+	sleep $WAIT_TIMERS
+	sync
+    else
+	echo "CPU Settings: Stock" | tee -a $UBER_LOGFILE
+    fi
 
-	if [ $CPU_VOLT -ne 0 ]; then
-		let CPU_VOLT1=775+$CPU_VOLT
-		let CPU_VOLT2=795+$CPU_VOLT
-		let CPU_VOLT3=805+$CPU_VOLT
-		let CPU_VOLT4=825+$CPU_VOLT
-		let CPU_VOLT5=835+$CPU_VOLT
-		let CPU_VOLT6=845+$CPU_VOLT
-		let CPU_VOLT7=865+$CPU_VOLT
-		let CPU_VOLT8=875+$CPU_VOLT
-		let CPU_VOLT9=910+$CPU_VOLT
-		let CPU_VOLT10=925+$CPU_VOLT
-		let CPU_VOLT11=955+$CPU_VOLT
-		let CPU_VOLT12=995+$CPU_VOLT
-		let CPU_VOLT13=1050+$CPU_VOLT
-		let CPU_VOLT14=1065+$CPU_VOLT
-		let CPU_VOLT15=1080+$CPU_VOLT
-		let CPU_VOLT16=1100+$CPU_VOLT
-		let CPU_VOLT17=1135+$CPU_VOLT
-		let CPU_VOLT18=1150+$CPU_VOLT
-		let CPU_VOLT19=1175+$CPU_VOLT
+    # ===================================================================================
+    # 3. CPU VOLTAGE SETTINGS
+    # ===================================================================================
 
-		echo 1 > /sys/devices/system/cpu/cpu0/online
-		echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu0/cpufreq/UV_mV_table
-
-		echo 1 > /sys/devices/system/cpu/cpu1/online
-		echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu1/cpufreq/UV_mV_table
-
-		echo 1 > /sys/devices/system/cpu/cpu2/online
-		echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu2/cpufreq/UV_mV_table
-
-		echo 1 > /sys/devices/system/cpu/cpu3/online
-		echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu3/cpufreq/UV_mV_table
-
-		sleep $WAIT_TIMERS
-		sync
-
-		echo "CPU Voltage: $CPU_VOLT" | tee -a $UBER_LOGFILE
-	else
-		echo "CPU Voltage: Stock" | tee -a $UBER_LOGFILE
+    if [ $CPU_VOLT -ne 0 ]; then
+	if [ $CPU_VOLT -ne advanced ]; then
+	    let 96MHZ=800+$CPU_VOLT
+	    let 192MHZ=800+$CPU_VOLT
+	    let 249MHZ=800+$CPU_VOLT
+	    let 300MHz=800+$CPU_VOLT
+	    let 422MHz=800+$CPU_VOLT
+	    let 652MHz=825+$CPU_VOLT
+	    let 729MHz=835+$CPU_VOLT
+	    let 883MHz=855+$CPU_VOLT
+	    let 960MHz=865+$CPU_VOLT
+	    let 1036MHz=875+$CPU_VOLT
+	    let 1190MHz=900+$CPU_VOLT
+	    let 1267MHz=915+$CPU_VOLT
+	    let 1497MHz=950+$CPU_VOLT
+	    let 1574MHz=965+$CPU_VOLT
+	    let 1728MHz=995+$CPU_VOLT
+	    let 1958MHz=1040+$CPU_VOLT
+	    let 2265MHz=1100+$CPU_VOLT
+	    let 2419MHz=1115+$CPU_VOLT
+	    let 2572MHz=1130+$CPU_VOLT
+	    let 2726MHz=1145+$CPU_VOLT
+	    let 2803MHz=1175+$CPU_VOLT
+	    let 2880MHz=1200+$CPU_VOLT
+	    let 3014MHz=1200+$CPU_VOLT
+	elif [ $CPU_VOLT -eq advanced ]; then
+	    . $UBER_VOLT_TABLE_FILE
 	fi
+	echo 1 > /sys/devices/system/cpu/cpu0/online
+	echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu0/cpufreq/UV_mV_table
 
-# ===================================================================================
-# 4. HOTPLUG SETTINGS
-# ===================================================================================
+	echo 1 > /sys/devices/system/cpu/cpu1/online
+	echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu1/cpufreq/UV_mV_table
+
+	echo 1 > /sys/devices/system/cpu/cpu2/online
+	echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu2/cpufreq/UV_mV_table
+
+	echo 1 > /sys/devices/system/cpu/cpu3/online
+	echo "$CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT1 $CPU_VOLT2 $CPU_VOLT3 $CPU_VOLT4 $CPU_VOLT5 $CPU_VOLT6 $CPU_VOLT7 $CPU_VOLT8 $CPU_VOLT9 $CPU_VOLT10 $CPU_VOLT11 $CPU_VOLT12 $CPU_VOLT13 $CPU_VOLT14 $CPU_VOLT15 $CPU_VOLT16 $CPU_VOLT17 $CPU_VOLT18 $CPU_VOLT19" > /sys/devices/system/cpu/cpu3/cpufreq/UV_mV_table
+
+	sleep $WAIT_TIMERS
+	sync
+
+	echo "CPU Voltage: $CPU_VOLT" | tee -a $UBER_LOGFILE
+    else
+	echo "CPU Voltage: Stock" | tee -a $UBER_LOGFILE
+    fi
+
+	# ===================================================================================
+	# 4. HOTPLUG SETTINGS
+	# ===================================================================================
 
 	# 4.1 MPDECISION SWITCH
 	if [ $MPDEC_SWITCH -eq 1 ]; then
-		echo $MPDEC_SWITCH > /sys/kernel/msm_mpdecision/conf/enabled
-		echo "MPDECISION: Enabled" | tee -a $UBER_LOGFILE
+	    echo $MPDEC_SWITCH > /sys/kernel/msm_mpdecision/conf/enabled
+	    echo "MPDECISION: Enabled" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+    	    # 4.1.1 MPDECISION SCREEN-OFF MAX FREQUENCY
+	    echo $MPDEC_SCROFF_MAX_FREQ > /sys/kernel/msm_mpdecision/conf/idle_freq
+	    echo "MPDECISION Max Screen-off Frequency: $MPDEC_SCROFF_MAX_FREQ" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 4.1.2 MPDECISION SCREEN-OFF SINGLE CORE
+	    echo $MPDEC_SCROFF_SINGLE_CORE > /sys/kernel/msm_mpdecision/conf/scroff_single_core
+
+	    if [ $MPDEC_SCROFF_SINGLE_CORE -eq 1 ]; then
+		echo "MPDECISION Screen-off Single Core: Enabled" | tee -a $UBER_LOGFILE
+	    else
+		echo "MPDECISION Screen-off Single Core: Disabled" | tee -a $UBER_LOGFILE
+	    fi
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 4.1.3 MPDECISION TOUCHBOOST
+	    echo $MPDEC_TOUCHBOOST > /sys/kernel/msm_mpdecision/conf/boost_enabled
+
+	    if [ $MPDEC_TOUCHBOOST -eq 1 ]; then
+		echo "MPDECISION Touchboost: Enabled" | tee -a $UBER_LOGFILE
+	    else
+		echo "MPDECISION Touchboost: Disabled" | tee -a $UBER_LOGFILE
+	    fi
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 4.1.4 MPDECISION MIN CPUS
+	    echo $MPDEC_MIN_CORE > /sys/kernel/msm_mpdecision/conf/min_cpus
+	    echo "MPDECISION Minimum CPU Cores: $MPDEC_MIN_CORE" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 4.1.5 MPDECISION MAX CPUS
+	    echo $MPDEC_MAX_CORE > /sys/kernel/msm_mpdecision/conf/max_cpus
+	    echo "MPDECISION Maximum CPU Cores: $MPDEC_MAX_CORE" | tee -a $UBER_LOGFILE
+
+	    sleep $WAIT_TIMERS
+	    sync
+
+	    # 4.1.6 MPDECISION HOTPLUG CONTROL
+	    if [ $MPDEC_HOTPLUG -eq 0 ]; then
+		echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
+		echo 37 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
+		echo 47 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
+		echo "Hotplugging of cores: Slow" | tee -a $UBER_LOGFILE
 
 		sleep $WAIT_TIMERS
 		sync
-
-    		# 4.1.1 MPDECISION SCREEN-OFF MAX FREQUENCY
-		echo $MPDEC_SCROFF_MAX_FREQ > /sys/kernel/msm_mpdecision/conf/idle_freq
-		echo "MPDECISION Max Screen-off Frequency: $MPDEC_SCROFF_MAX_FREQ" | tee -a $UBER_LOGFILE
-
-		sleep $WAIT_TIMERS
-		sync
-
-		# 4.1.2 MPDECISION SCREEN-OFF SINGLE CORE
-		echo $MPDEC_SCROFF_SINGLE_CORE > /sys/kernel/msm_mpdecision/conf/scroff_single_core
-
-		if [ $MPDEC_SCROFF_SINGLE_CORE -eq 1 ]; then
-			echo "MPDECISION Screen-off Single Core: Enabled" | tee -a $UBER_LOGFILE
-		else
-			echo "MPDECISION Screen-off Single Core: Disabled" | tee -a $UBER_LOGFILE
-		fi
+	    elif [ $MPDEC_HOTPLUG -eq 1 ]; then
+		echo 12 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
+		echo 25 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
+		echo 30 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
+		echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
+		echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
+		echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
+		echo "Hotplugging of cores: Stock" | tee -a $UBER_LOGFILE
 
 		sleep $WAIT_TIMERS
 		sync
-
-		# 4.1.3 MPDECISION TOUCHBOOST
-		echo $MPDEC_TOUCHBOOST > /sys/kernel/msm_mpdecision/conf/boost_enabled
-
-		if [ $MPDEC_TOUCHBOOST -eq 1 ]; then
-			echo "MPDECISION Touchboost: Enabled" | tee -a $UBER_LOGFILE
-		else
-			echo "MPDECISION Touchboost: Disabled" | tee -a $UBER_LOGFILE
-		fi
-
-		sleep $WAIT_TIMERS
-		sync
-
-		# 4.1.4 MPDECISION MIN CPUS
-		echo $MPDEC_MIN_CORE > /sys/kernel/msm_mpdecision/conf/min_cpus
-		echo "MPDECISION Minimum CPU Cores: $MPDEC_MIN_CORE" | tee -a $UBER_LOGFILE
+	    elif [ $MPDEC_HOTPLUG -eq 2 ]; then
+		echo 10 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
+		echo 14 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
+		echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
+		echo "Hotplugging of cores: Fast" | tee -a $UBER_LOGFILE
 
 		sleep $WAIT_TIMERS
 		sync
-
-		# 4.1.5 MPDECISION MAX CPUS
-		echo $MPDEC_MAX_CORE > /sys/kernel/msm_mpdecision/conf/max_cpus
-		echo "MPDECISION Maximum CPU Cores: $MPDEC_MAX_CORE" | tee -a $UBER_LOGFILE
+	    elif [ $MPDEC_HOTPLUG -eq 3 ]; then
+		echo $RUNQUEUE0 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
+		echo $RUNQUEUE2 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
+		echo $RUNQUEUE4 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
+		echo $RUNQUEUE6 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_6
+		echo $TIME0 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
+		echo $TIME2 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
+		echo $TIME4 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
+		echo $TIME6 > /sys/kernel/msm_mpdecision/conf/twts_threshold_6
+		echo "Hotplugging of cores: Custom" | tee -a $UBER_LOGFILE
 
 		sleep $WAIT_TIMERS
 		sync
+	    fi
 
-		# 4.1.6 MPDECISION HOTPLUG CONTROL
-		if [ $MPDEC_HOTPLUG -eq 0 ]; then
-			echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
-			echo 37 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
-			echo 47 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
-			echo "Hotplugging of cores: Slow" | tee -a $UBER_LOGFILE
+	    # 4.1.7 MPDECISION UNPLUG CONTROL
+	    if [ $MPDEC_UNPLUG -eq 0 ]; then
+		echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
+		echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
+		echo 26 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
+		echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
+		echo "Unplugging of cores: Slow" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_HOTPLUG -eq 1 ]; then
-			echo 12 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
-			echo 25 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
-			echo 30 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
-			echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
-			echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
-			echo 140 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
-			echo "Hotplugging of cores: Stock" | tee -a $UBER_LOGFILE
+		sleep $WAIT_TIMERS
+		sync
+	    elif [ $MPDEC_UNPLUG -eq 1 ]; then
+		echo 7 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
+		echo 10 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
+		echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
+		echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
+		echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
+		echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
+		echo "Unplugging of cores: Stock" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_HOTPLUG -eq 2 ]; then
-			echo 10 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
-			echo 14 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
-			echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
-			echo "Hotplugging of cores: Fast" | tee -a $UBER_LOGFILE
+		sleep $WAIT_TIMERS
+		sync
+	    elif [ $MPDEC_UNPLUG -eq 2 ]; then
+		echo 34 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
+		echo 39 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
+		echo 46 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
+		echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
+		echo "Unplugging of cores: Fast" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_HOTPLUG -eq 3 ]; then
-			echo $RUNQUEUE0 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_0
-			echo $RUNQUEUE2 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_2
-			echo $RUNQUEUE4 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_4
-			echo $RUNQUEUE6 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_6
-			echo $TIME0 > /sys/kernel/msm_mpdecision/conf/twts_threshold_0
-			echo $TIME2 > /sys/kernel/msm_mpdecision/conf/twts_threshold_2
-			echo $TIME4 > /sys/kernel/msm_mpdecision/conf/twts_threshold_4
-			echo $TIME6 > /sys/kernel/msm_mpdecision/conf/twts_threshold_6
-			echo "Hotplugging of cores: Custom" | tee -a $UBER_LOGFILE
+		sleep $WAIT_TIMERS
+		sync
+	    elif [ $MPDEC_UNPLUG -eq 3 ]; then
+		echo $RUNQUEUE1 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_1
+		echo $RUNQUEUE3 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
+		echo $RUNQUEUE5 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
+		echo $RUNQUEUE7 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
+		echo $TIME1 > /sys/kernel/msm_mpdecision/conf/twts_threshold_1
+		echo $TIME3 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
+		echo $TIME5 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
+		echo $TIME7 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
+		echo "Unplugging of cores: Custom" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		fi
-
-		# 4.1.7 MPDECISION UNPLUG CONTROL
-		if [ $MPDEC_UNPLUG -eq 0 ]; then
-			echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
-			echo 22 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
-			echo 26 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
-			echo 400 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
-			echo "Unplugging of cores: Slow" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_UNPLUG -eq 1 ]; then
-			echo 7 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
-			echo 10 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
-			echo 18 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
-			echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
-			echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
-			echo 190 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
-			echo "Unplugging of cores: Stock" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_UNPLUG -eq 2 ]; then
-			echo 34 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
-			echo 39 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
-			echo 46 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
-			echo 100 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
-			echo "Unplugging of cores: Fast" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-		elif [ $MPDEC_UNPLUG -eq 3 ]; then
-			echo $RUNQUEUE1 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_1
-			echo $RUNQUEUE3 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_3
-			echo $RUNQUEUE5 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_5
-			echo $RUNQUEUE7 > /sys/kernel/msm_mpdecision/conf/nwns_threshold_7
-			echo $TIME1 > /sys/kernel/msm_mpdecision/conf/twts_threshold_1
-			echo $TIME3 > /sys/kernel/msm_mpdecision/conf/twts_threshold_3
-			echo $TIME5 > /sys/kernel/msm_mpdecision/conf/twts_threshold_5
-			echo $TIME7 > /sys/kernel/msm_mpdecision/conf/twts_threshold_7
-			echo "Unplugging of cores: Custom" | tee -a $UBER_LOGFILE
-
-			sleep $WAIT_TIMERS
-			sync
-		fi
+		sleep $WAIT_TIMERS
+		sync
+	    fi
 	else
-		echo $MPDEC_SWITCH > /sys/kernel/msm_mpdecision/conf/enabled
-		echo "MPDecision: Disabled" | tee -a $UBER_LOGFILE
+	    echo $MPDEC_SWITCH > /sys/kernel/msm_mpdecision/conf/enabled
+	    echo "MPDecision: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 5. I/O SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 5. I/O SETTINGS
+	# ===================================================================================
 
 	# 5.1 I/O SCHEDULER
 	echo $IO_SCHEDULER > /sys/block/mmcblk0/queue/scheduler
@@ -440,182 +454,182 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	sleep $WAIT_TIMERS
 	sync
 
-# ===================================================================================
-# 6. GPU SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 6. GPU SETTINGS
+	# ===================================================================================
 
 	# 6.1 GPU SETTINGS SWITCH
 	if [ $GPU_SWITCH -eq 1 ]; then
 
-		# 6.2 GPU FREQUENCY SCALING
-		if [ $GPU_PERFORMANCE -eq 0 ]; then
+	    # 6.2 GPU FREQUENCY SCALING
+	    if [ $GPU_PERFORMANCE -eq 0 ]; then
 
-			# 6.2.1 GPU MAX FREQUENCY
-			echo $GPU_MAX >  /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_gpuclk
-			echo "GPU Max Frequency: $GPU_MAX kHz" | tee -a $UBER_LOGFILE
+		# 6.2.1 GPU MAX FREQUENCY
+		echo $GPU_MAX >  /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_gpuclk
+		echo "GPU Max Frequency: $GPU_MAX kHz" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
+		sleep $WAIT_TIMERS
+		sync
 
-			# 6.2.2 GPU MIN FREQUENCY
-			echo $GPU_MIN > /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_pwrlevel
-			echo "GPU Min Frequency: $GPU_MIN kHz" | tee -a $UBER_LOGFILE
+		# 6.2.2 GPU MIN FREQUENCY
+		echo $GPU_MIN > /sys/devices/fdb00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_pwrlevel
+		echo "GPU Min Frequency: $GPU_MIN kHz" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
+		sleep $WAIT_TIMERS
+		sync
 
-			# 6.3.1 GPU GOVERNORS
-			echo ondemand > /sys/class/kgsl/kgsl-3d0/pwrscale/trustzone/governor
-			echo "GPU Governor: Ondemand" | tee -a $UBER_LOGFILE
+		# 6.3.1 GPU GOVERNORS
+		echo ondemand > /sys/class/kgsl/kgsl-3d0/pwrscale/trustzone/governor
+		echo "GPU Governor: Ondemand" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
+		sleep $WAIT_TIMERS
+		sync
 
-			# 6.3.2 GPU UP THRESHOLD
-			echo $GPU_UP > /sys/module/msm_kgsl_core/parameters/up_threshold
-			echo "GPU Up Threshold: $GPU_UP" | tee -a $UBER_LOGFILE
+		# 6.3.2 GPU UP THRESHOLD
+		echo $GPU_UP > /sys/module/msm_kgsl_core/parameters/up_threshold
+		echo "GPU Up Threshold: $GPU_UP" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
+		sleep $WAIT_TIMERS
+		sync
 
-			# 6.3.3 GPU DOWN THRESHOLD
-			echo $GPU_DOWN > /sys/module/msm_kgsl_core/parameters/down_threshold
-			echo "GPU Down Threshold: $GPU_DOWN" | tee -a $UBER_LOGFILE
+		# 6.3.3 GPU DOWN THRESHOLD
+		echo $GPU_DOWN > /sys/module/msm_kgsl_core/parameters/down_threshold
+		echo "GPU Down Threshold: $GPU_DOWN" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		else
-			echo performance > /sys/class/kgsl/kgsl-3d0/pwrscale/trustzone/governor
-			echo "GPU Governor: Performance" | tee -a $UBER_LOGFILE
+		sleep $WAIT_TIMERS
+		sync
+	    else
+		echo performance > /sys/class/kgsl/kgsl-3d0/pwrscale/trustzone/governor
+		echo "GPU Governor: Performance" | tee -a $UBER_LOGFILE
 
-			sleep $WAIT_TIMERS
-			sync
-		fi
+		sleep $WAIT_TIMERS
+		sync
+	    fi
 	else
-		echo "GPU Settings: Stock" | tee -a $UBER_LOGFILE
+	    echo "GPU Settings: Stock" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 7. GAMMA SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 7. GAMMA SETTINGS
+	# ===================================================================================
 	# 7.1 GAMMA PRESET
 	if [ $GAMMA_PRESET -eq 1 ] || [ $GAMMA_PRESET -eq 2 ]; then
 
-		# 7.1.1 Chet's Preset
-		if [ $GAMMA_PRESET -eq 1 ]; then
-			BLUE_NEGATIVE="0 12 19 30 39 48 56 72 83 105 118 126 121 114 109 102 93 73 63 54 40 33 20"
-			BLUE_POSITIVE="0 12 19 30 39 48 56 72 83 105 118 130 121 115 114 102 82 76 63 54 40 33 20"
-			GREEN_NEGATIVE="0 12 19 30 39 54 61 78 84 107 123 132 117 110 108 97 90 71 61 52 45 37 21"
-			GREEN_POSITIVE="0 12 19 30 39 54 61 78 84 107 121 130 119 112 107 99 76 72 57 50 45 37 21"
-			RED_NEGATIVE="0 12 19 30 39 48 56 72 83 105 121 126 119 112 107 99 91 71 63 53 44 36 22"
-			RED_POSITIVE="0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22"
-			WHITE_POINT="28"
-			GAMMA_SET=1
-			echo "Gamma Preset: Cl3Keners Profile" | tee -a $UBER_LOGFILE
+	    # 7.1.1 Chet's Preset
+	    if [ $GAMMA_PRESET -eq 1 ]; then
+		BLUE_NEGATIVE="0 12 19 30 39 48 56 72 83 105 118 126 121 114 109 102 93 73 63 54 40 33 20"
+		BLUE_POSITIVE="0 12 19 30 39 48 56 72 83 105 118 130 121 115 114 102 82 76 63 54 40 33 20"
+		GREEN_NEGATIVE="0 12 19 30 39 54 61 78 84 107 123 132 117 110 108 97 90 71 61 52 45 37 21"
+		GREEN_POSITIVE="0 12 19 30 39 54 61 78 84 107 121 130 119 112 107 99 76 72 57 50 45 37 21"
+		RED_NEGATIVE="0 12 19 30 39 48 56 72 83 105 121 126 119 112 107 99 91 71 63 53 44 36 22"
+		RED_POSITIVE="0 12 19 30 39 48 56 72 83 105 121 134 119 113 110 98 78 72 59 50 44 36 22"
+		WHITE_POINT="28"
+		GAMMA_SET=1
+		echo "Gamma Preset: Cl3Keners Profile" | tee -a $UBER_LOGFILE
 
 		# 7.1.2 Custom Preset
-		elif [ $GAMMA_PRESET -eq 2 ] && [ -f $UBER_COLORFILE ]; then
-			count=0
-			while [ "$count" -lt "7" ]; do
-				let "count+=1"
-				read x$count
-			done < $UBER_COLORFILE
-			BLUE_NEGATIVE=$x1
-			BLUE_POSITIVE=$x2
-			GREEN_NEGATIVE=$x3
-			GREEN_POSITIVE=$x4
-			RED_NEGATIVE=$x5
-			RED_POSITIVE=$x6
-			WHITE_POINT=$x7
-			GAMMA_SET=1
-			echo "Gamma Preset: Custom Profile" | tee -a $UBER_LOGFILE
+	    elif [ $GAMMA_PRESET -eq 2 ] && [ -f $UBER_COLORFILE ]; then
+		count=0
+		while [ "$count" -lt "7" ]; do
+		    let "count+=1"
+		    read x$count
+		done < $UBER_COLORFILE
+		BLUE_NEGATIVE=$x1
+		BLUE_POSITIVE=$x2
+		GREEN_NEGATIVE=$x3
+		GREEN_POSITIVE=$x4
+		RED_NEGATIVE=$x5
+		RED_POSITIVE=$x6
+		WHITE_POINT=$x7
+		GAMMA_SET=1
+		echo "Gamma Preset: Custom Profile" | tee -a $UBER_LOGFILE
 
 		# 7.1.3 Fall back if Gamma Profile is missing
-		else
-			echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
-		fi
-
-		# 7.1 Apply
-		if [ $GAMMA_SET -eq 1 ]; then
-			echo "$RED_POSITIVE" > /sys/module/dsi_panel/kgamma_rp
-			echo "$RED_NEGATIVE" > /sys/module/dsi_panel/kgamma_rn
-			echo "$GREEN_POSITIVE" > /sys/module/dsi_panel/kgamma_gp
-			echo "$GREEN_NEGATIVE" > /sys/module/dsi_panel/kgamma_gn
-			echo "$BLUE_POSITIVE" > /sys/module/dsi_panel/kgamma_bp
-			echo "$BLUE_NEGATIVE" > /sys/module/dsi_panel/kgamma_bn
-			echo "$WHITE_POINT" > /sys/module/dsi_panel/kgamma_w
-
-			sleep $WAIT_TIMERS
-			sync
-		fi
-
-	# 7.1.0 Stock
-	else
+	    else
 		echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
+	    fi
+
+	    # 7.1 Apply
+	    if [ $GAMMA_SET -eq 1 ]; then
+		echo "$RED_POSITIVE" > /sys/module/dsi_panel/kgamma_rp
+		echo "$RED_NEGATIVE" > /sys/module/dsi_panel/kgamma_rn
+		echo "$GREEN_POSITIVE" > /sys/module/dsi_panel/kgamma_gp
+		echo "$GREEN_NEGATIVE" > /sys/module/dsi_panel/kgamma_gn
+		echo "$BLUE_POSITIVE" > /sys/module/dsi_panel/kgamma_bp
+		echo "$BLUE_NEGATIVE" > /sys/module/dsi_panel/kgamma_bn
+		echo "$WHITE_POINT" > /sys/module/dsi_panel/kgamma_w
+
+		sleep $WAIT_TIMERS
+		sync
+	    fi
+
+	    # 7.1.0 Stock
+	else
+	    echo "Gamma Preset: Stock" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 8. SOUND SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 8. SOUND SETTINGS
+	# ===================================================================================
 
 	# 8.1 SOUND ENGINE
 	if [ -d $FRANCO_PATH ]; then
-		echo $FRANCO_CALL > /sys/devices/virtual/misc/soundcontrol/headset_boost
-		echo $FRANCO_MIC > /sys/devices/virtual/misc/soundcontrol/mic_boost
-		echo $FRANCO_SPEAKER > /sys/devices/virtual/misc/soundcontrol/speaker_boost
-		echo $FRANCO_VOLUME > /sys/devices/virtual/misc/soundcontrol/volume_boost
-		echo "Sound Engine: Franco Sound" | tee -a $UBER_LOGFILE
+	    echo $FRANCO_CALL > /sys/devices/virtual/misc/soundcontrol/headset_boost
+	    echo $FRANCO_MIC > /sys/devices/virtual/misc/soundcontrol/mic_boost
+	    echo $FRANCO_SPEAKER > /sys/devices/virtual/misc/soundcontrol/speaker_boost
+	    echo $FRANCO_VOLUME > /sys/devices/virtual/misc/soundcontrol/volume_boost
+	    echo "Sound Engine: Franco Sound" | tee -a $UBER_LOGFILE
 
 	elif [ -d $FAUX_PATH ]; then
-		echo $FAUX_CAM > /sys/kernel/sound_control_3/gpl_cam_mic_gain
-		echo $FAUX_HEAD $FAUX_HEAD > /sys/kernel/sound_control_3/gpl_headphone_gain
-		echo $FAUX_POW $FAUX_POW > /sys/kernel/sound_control_3/gpl_headphone_pa_gain
-		echo $FAUX_MIC > /sys/kernel/sound_control_3/gpl_mic_gain
-		echo $FAUX_SPEAKER $FAUX_SPEAKER > /sys/kernel/sound_control_3/gpl_speaker_gain
-		echo $FAUX_LOCK > /sys/kernel/sound_control_3/gpl_sound_control_locked
-		echo "Sound Engine: Faux Sound" | tee -a $UBER_LOGFILE
+	    echo $FAUX_CAM > /sys/kernel/sound_control_3/gpl_cam_mic_gain
+	    echo $FAUX_HEAD $FAUX_HEAD > /sys/kernel/sound_control_3/gpl_headphone_gain
+	    echo $FAUX_POW $FAUX_POW > /sys/kernel/sound_control_3/gpl_headphone_pa_gain
+	    echo $FAUX_MIC > /sys/kernel/sound_control_3/gpl_mic_gain
+	    echo $FAUX_SPEAKER $FAUX_SPEAKER > /sys/kernel/sound_control_3/gpl_speaker_gain
+	    echo $FAUX_LOCK > /sys/kernel/sound_control_3/gpl_sound_control_locked
+	    echo "Sound Engine: Faux Sound" | tee -a $UBER_LOGFILE
 
 	else
-		echo "Sound Engine: Stock" | tee -a $UBER_LOGFILE
+	    echo "Sound Engine: Stock" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
 	sync
 
-# ===================================================================================
-# 9. MEMORY SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 9. MEMORY SETTINGS
+	# ===================================================================================
 
 	# 9.1 ZRAM SETTINGS
 	# 9.1.1 ZRAM SWITCH
 	if [ $ZRAM_SWITCH -eq 1 ]; then
-		swapoff /dev/block/zram0
-		echo 1 > /sys/block/zram0/reset
+	    swapoff /dev/block/zram0
+	    echo 1 > /sys/block/zram0/reset
 
-		# 9.1.2 ZRAM COMPRESSION
-		echo $ZRAM_COMPRESSION > /sys/block/zram0/comp_algorithm
-		echo "zRAM COMPRESSION: $ZRAM_COMPRESSION" | tee -a $UBER_LOGFILE
+	    # 9.1.2 ZRAM COMPRESSION
+	    echo $ZRAM_COMPRESSION > /sys/block/zram0/comp_algorithm
+	    echo "zRAM COMPRESSION: $ZRAM_COMPRESSION" | tee -a $UBER_LOGFILE
 
-		sleep 0.5
-		sync
+	    sleep 0.5
+	    sync
 
-		# 9.1.3 ZRAM DISK SIZE (MB)
-		if [ $ZRAM_DISKSIZE -eq 256 ]; then
-			echo 268435456 > /sys/block/zram0/disksize
-		elif [ $ZRAM_DISKSIZE -eq 512 ]; then
-			echo 536870912 > /sys/block/zram0/disksize
-		elif [ $ZRAM_DISKSIZE -eq 1024 ]; then
-			echo 1073741824 > /sys/block/zram0/disksize
-		fi
+	    # 9.1.3 ZRAM DISK SIZE (MB)
+	    if [ $ZRAM_DISKSIZE -eq 256 ]; then
+		echo 268435456 > /sys/block/zram0/disksize
+	    elif [ $ZRAM_DISKSIZE -eq 512 ]; then
+		echo 536870912 > /sys/block/zram0/disksize
+	    elif [ $ZRAM_DISKSIZE -eq 1024 ]; then
+		echo 1073741824 > /sys/block/zram0/disksize
+	    fi
 
-		mkswap /dev/block/zram0
-		swapon /dev/block/zram0
-		echo "zRAM Support: $ZRAM_DISKSIZE MB Enabled" | tee -a $UBER_LOGFILE
+	    mkswap /dev/block/zram0
+	    swapon /dev/block/zram0
+	    echo "zRAM Support: $ZRAM_DISKSIZE MB Enabled" | tee -a $UBER_LOGFILE
 
-		sleep 0.5
-		sync
+	    sleep 0.5
+	    sync
 	else
-		echo "zRAM Support: Disabled" | tee -a $UBER_LOGFILE
+	    echo "zRAM Support: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	# 9.2 VIRTUAL MACHINE SETTINGS
@@ -651,9 +665,9 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $FS_DELAY > /proc/sys/vm/laptop_mode
 
 	if [ $FS_DELAY -eq 1 ]; then
-		echo "FS DELAY WRITEBACK: Enabled" | tee -a $UBER_LOGFILE
+	    echo "FS DELAY WRITEBACK: Enabled" | tee -a $UBER_LOGFILE
 	else
-		echo "FS DELAY WRITEBACK: Disabled" | tee -a $UBER_LOGFILE
+	    echo "FS DELAY WRITEBACK: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep 0.5
@@ -663,69 +677,69 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $KSM > /sys/kernel/mm/ksm/run
 
 	if [ $KSM -eq 1 ]; then
-		echo "KSM: Enabled" | tee -a $UBER_LOGFILE
+	    echo "KSM: Enabled" | tee -a $UBER_LOGFILE
 	else
-		echo "KSM: Disabled" | tee -a $UBER_LOGFILE
+	    echo "KSM: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
 	sync
 
-# ===================================================================================
-# 10. WAKE SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 10. WAKE SETTINGS
+	# ===================================================================================
 
 	# 10.1 WAKE CONTROL SWITCH
 	if [ $WAKE_CONTROLS -eq 1 ]; then
 
-		# 10.2 DOUBLE TAP TO WAKE
-		echo $DT2W > /sys/android_touch/doubletap2wake
+	    # 10.2 DOUBLE TAP TO WAKE
+	    echo $DT2W > /sys/android_touch/doubletap2wake
 
-		if [ $DT2W -eq 1 ]; then
-        		echo "DT2W: Bottom screen enabled" | tee -a $UBER_LOGFILE
-	        elif [ $DT2W -eq 2 ]; then
-	        	echo "DT2W: Full enabled" | tee -a $UBER_LOGFILE
-	        else
-	        	echo "DT2W: Disabled" | tee -a $UBER_LOGFILE
-	        fi
+	    if [ $DT2W -eq 1 ]; then
+        	echo "DT2W: Bottom screen enabled" | tee -a $UBER_LOGFILE
+	    elif [ $DT2W -eq 2 ]; then
+	        echo "DT2W: Full enabled" | tee -a $UBER_LOGFILE
+	    else
+	        echo "DT2W: Disabled" | tee -a $UBER_LOGFILE
+	    fi
 
-		# 10.3 SWEEP TO WAKE/SLEEP
-	        if [ $S2WS -eq 1 ]; then
-	        	echo 1 > /sys/android_touch/sweep2wake
-				echo 0 > /sys/android_touch/s2w_s2sonly
-	        	echo "S2W/S: Enabled" | tee -a $UBER_LOGFILE
-	        elif [ $S2WS -eq 2 ]; then
-	        	echo 1 > /sys/android_touch/sweep2wake
-				echo 1 > /sys/android_touch/s2w_s2sonly
-	        	echo "S2S only: Enabled" | tee -a $UBER_LOGFILE
-	        else
-	        	echo 0 > /sys/android_touch/sweep2wake
-				echo 0 > /sys/android_touch/s2w_s2sonly
-	        	echo "S2W/S: Disabled" | tee -a $UBER_LOGFILE
-	        fi
+	    # 10.3 SWEEP TO WAKE/SLEEP
+	    if [ $S2WS -eq 1 ]; then
+	        echo 1 > /sys/android_touch/sweep2wake
+		echo 0 > /sys/android_touch/s2w_s2sonly
+	        echo "S2W/S: Enabled" | tee -a $UBER_LOGFILE
+	    elif [ $S2WS -eq 2 ]; then
+	        echo 1 > /sys/android_touch/sweep2wake
+		echo 1 > /sys/android_touch/s2w_s2sonly
+	        echo "S2S only: Enabled" | tee -a $UBER_LOGFILE
+	    else
+	        echo 0 > /sys/android_touch/sweep2wake
+		echo 0 > /sys/android_touch/s2w_s2sonly
+	        echo "S2W/S: Disabled" | tee -a $UBER_LOGFILE
+	    fi
 
-		# 10.4 POWER KEY SUSPEND
-		echo $PWRKEY > /sys/module/qpnp_power_on/parameters/pwrkey_suspend
+	    # 10.4 POWER KEY SUSPEND
+	    echo $PWRKEY > /sys/module/qpnp_power_on/parameters/pwrkey_suspend
 
-		if [ $PWRKEY -eq 1 ]; then
-        		echo "Powerkey Suspend: Enabled" | tee -a $UBER_LOGFILE
-	        else
-	        	echo "Powerkey Suspend: Disabled" | tee -a $UBER_LOGFILE
-	        fi
+	    if [ $PWRKEY -eq 1 ]; then
+        	echo "Powerkey Suspend: Enabled" | tee -a $UBER_LOGFILE
+	    else
+	        echo "Powerkey Suspend: Disabled" | tee -a $UBER_LOGFILE
+	    fi
 
-		# 10.5 WAKE TIMEOUT
-		echo $TIMEOUT > /sys/android_touch/wake_timeout
-		echo "S2WS/DT2W Timeout: $TIMEOUT second/s" | tee -a $UBER_LOGFILE
+	    # 10.5 WAKE TIMEOUT
+	    echo $TIMEOUT > /sys/android_touch/wake_timeout
+	    echo "S2WS/DT2W Timeout: $TIMEOUT second/s" | tee -a $UBER_LOGFILE
 
-		sleep $WAIT_TIMERS
-		sync
+	    sleep $WAIT_TIMERS
+	    sync
 	else
-		echo "Wake Controls: Disabled" | tee -a $UBER_LOGFILE
+	    echo "Wake Controls: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
-# ===================================================================================
-# 11. MISCELLANEOUS SETTINGS
-# ===================================================================================
+	# ===================================================================================
+	# 11. MISCELLANEOUS SETTINGS
+	# ===================================================================================
 
 	# 11.1 TCP CONGESTION CONTROL
 	echo $TCP > /proc/sys/net/ipv4/tcp_congestion_control
@@ -738,9 +752,9 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $DYNAMIC_FSYNC > /sys/kernel/dyn_fsync/Dyn_fsync_active
 
 	if [ $DYNAMIC_FSYNC -eq 1 ]; then
-		echo "Dynamic FSync: Enabled" | tee -a $UBER_LOGFILE
+	    echo "Dynamic FSync: Enabled" | tee -a $UBER_LOGFILE
 	else
-		echo "Dynamic FSync: Disabled" | tee -a $UBER_LOGFILE
+	    echo "Dynamic FSync: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
@@ -753,14 +767,14 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	sync
 
 	if [ $POWER_SUSPEND -eq 0 ]; then
-		echo "Power Suspend Mode: AUTOSLEEP" | tee -a $UBER_LOGFILE
+	    echo "Power Suspend Mode: AUTOSLEEP" | tee -a $UBER_LOGFILE
 	elif [ $POWER_SUSPEND -eq 1 ]; then
-		echo "Power Suspend Mode: USERSPACE" | tee -a $UBER_LOGFILE
-		echo 1 > /sys/kernel/power_suspend/power_suspend_state
+	    echo "Power Suspend Mode: USERSPACE" | tee -a $UBER_LOGFILE
+	    echo 1 > /sys/kernel/power_suspend/power_suspend_state
 	elif [ $POWER_SUSPEND -eq 2 ]; then
-		echo "Power Suspend Mode: LCD_PANEL" | tee -a $UBER_LOGFILE
+	    echo "Power Suspend Mode: LCD_PANEL" | tee -a $UBER_LOGFILE
 	elif [ $POWER_SUSPEND -eq 3 ]; then
-		echo "Power Suspend Mode: HYBRID" | tee -a $UBER_LOGFILE
+	    echo "Power Suspend Mode: HYBRID" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
@@ -778,22 +792,22 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $FAST_CHARGE > /sys/kernel/fast_charge/force_fast_charge
 
 	if [ $FAST_CHARGE -eq 1 ]; then
-		echo "USB Fast Charge: Enabled" | tee -a $UBER_LOGFILE
+	    echo "USB Fast Charge: Enabled" | tee -a $UBER_LOGFILE
 
-		sleep $WAIT_TIMERS
-		sync
+	    sleep $WAIT_TIMERS
+	    sync
 	elif [ $FAST_CHARGE -eq 2 ]; then
-		# 11.5.2 FAST CHARGE LEVEL
-		echo $FC_LEVEL > /sys/kernel/fast_charge/fast_charge_level
-		echo "USB Fast Charge: Enabled @ $FC_LEVEL mA" | tee -a $UBER_LOGFILE
+	    # 11.5.2 FAST CHARGE LEVEL
+	    echo $FC_LEVEL > /sys/kernel/fast_charge/fast_charge_level
+	    echo "USB Fast Charge: Enabled @ $FC_LEVEL mA" | tee -a $UBER_LOGFILE
 
-		sleep $WAIT_TIMERS
-		sync
+	    sleep $WAIT_TIMERS
+	    sync
 	else
-		echo "USB Fast Charge: Disabled" | tee -a $UBER_LOGFILE
+	    echo "USB Fast Charge: Disabled" | tee -a $UBER_LOGFILE
 
-		sleep $WAIT_TIMERS
-		sync
+	    sleep $WAIT_TIMERS
+	    sync
 	fi
 
 	# 11.6 BATTERY LIFE EXTENDER
@@ -814,9 +828,9 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $GFS > /sys/kernel/sched/gentle_fair_sleepers
 
 	if [ $GFS -eq 1 ]; then
-		echo "GENTLE FAIR SLEEPERS: Enabled" | tee -a $UBER_LOGFILE
+	    echo "GENTLE FAIR SLEEPERS: Enabled" | tee -a $UBER_LOGFILE
 	else
-		echo "GENTLE FAIR SLEEPERS: Disabled" | tee -a $UBER_LOGFILE
+	    echo "GENTLE FAIR SLEEPERS: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
@@ -826,29 +840,29 @@ if [ $ENABLED -eq 1 ] && [ $COMPLETED -eq 1 ] ; then
 	echo $ARCH > /sys/kernel/sched/arch_power
 
 	if [ $ARCH -eq 1 ]; then
-		echo "ARCH POWER: Enabled" | tee -a $UBER_LOGFILE
+	    echo "ARCH POWER: Enabled" | tee -a $UBER_LOGFILE
 	else
-		echo "ARCH POWER: Disabled" | tee -a $UBER_LOGFILE
+	    echo "ARCH POWER: Disabled" | tee -a $UBER_LOGFILE
 	fi
 
 	sleep $WAIT_TIMERS
 	sync
 
-# ===================================================================================
-# FOOTER
-# ===================================================================================
+	# ===================================================================================
+	# FOOTER
+	# ===================================================================================
 
 	echo "Finished kernel configuration" | tee -a $UBER_LOGFILE
-else
+    else
 	echo "Kernel Configuration: Disabled" | tee -a $UBER_LOGFILE
-fi
+    fi
 
-# - End timestamp
-echo "$(date)" | tee -a $UBER_LOGFILE
+    # - End timestamp
+    echo "$(date)" | tee -a $UBER_LOGFILE
 
-# - Apply correct permission to the log file
-chmod 644 $UBER_LOGFILE
+    # - Apply correct permission to the log file
+    chmod 644 $UBER_LOGFILE
 
-# - Exit
-exit 0
+    # - Exit
+    exit 0
 
