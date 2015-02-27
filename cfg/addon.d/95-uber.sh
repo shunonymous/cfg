@@ -10,6 +10,7 @@ cat <<EOF
 etc/uber_$VERSION.cfg
 etc/advanced_$VERSION.cfg
 etc/uber_color_$VERSION.cfg
+etc/volt_table_$VERSION.cfg
 EOF
 }
 
